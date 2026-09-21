@@ -3,177 +3,21 @@
   "office": {
     "id": "off-ss40-hq",
     "name": "SS40 Network Main Office",
-    "address": "SS40 Tech Park, 4th Floor, Innovation Wing",
-    "latitude": 12.9716,
-    "longitude": 77.5946,
-    "radiusMeters": 100,
+    "address": "SS40 Tech Park, 4th Floor",
+    "latitude": 8.729226,
+    "longitude": 77.697511,
+    "radiusMeters": 500,
     "timezone": "Asia/Kolkata",
     "status": "ACTIVE"
   },
   "departments": [
-    {
-      "id": "dept-eng",
-      "name": "Software Engineering",
-      "code": "DEV"
-    },
-    {
-      "id": "dept-qa",
-      "name": "Quality Assurance",
-      "code": "QA"
-    },
-    {
-      "id": "dept-ui",
-      "name": "UI / UX Design",
-      "code": "DES"
-    },
-    {
-      "id": "dept-ops",
-      "name": "DevOps & IT Support",
-      "code": "OPS"
-    },
-    {
-      "id": "dept-mkt",
-      "name": "Marketing & Sales",
-      "code": "MKT"
-    }
+    { "id": "dept-eng", "name": "Software Engineering", "code": "DEV" },
+    { "id": "dept-qa", "name": "Quality Assurance", "code": "QA" },
+    { "id": "dept-ui", "name": "UI / UX Design", "code": "DES" },
+    { "id": "dept-ops", "name": "DevOps & IT Support", "code": "OPS" },
+    { "id": "dept-mkt", "name": "Marketing & Sales", "code": "MKT" }
   ],
-  "employees": [
-    {
-      "id": "emp-001",
-      "employeeCode": "SS40-001",
-      "name": "Abraham Samuel",
-      "email": "abraham@ss40.network",
-      "phone": "+91 98765 43210",
-      "departmentId": "dept-eng",
-      "designation": "Senior Full Stack Lead",
-      "barcodeValue": "SS40-EMP-8F73K2",
-      "pin": "1234",
-      "deviceToken": null,
-      "status": "ACTIVE",
-      "joinedAt": "2024-01-15",
-      "createdAt": "2024-01-15T09:00:00.000Z"
-    },
-    {
-      "id": "emp-002",
-      "employeeCode": "SS40-002",
-      "name": "David Raj",
-      "email": "david.r@ss40.network",
-      "phone": "+91 98765 43211",
-      "departmentId": "dept-eng",
-      "designation": "Frontend Engineer",
-      "barcodeValue": "SS40-EMP-9X21B4",
-      "pin": "4321",
-      "deviceToken": null,
-      "status": "ACTIVE",
-      "joinedAt": "2024-03-01",
-      "createdAt": "2024-03-01T09:00:00.000Z"
-    },
-    {
-      "id": "emp-003",
-      "employeeCode": "SS40-003",
-      "name": "Priya Sundaram",
-      "email": "priya.s@ss40.network",
-      "phone": "+91 98765 43212",
-      "departmentId": "dept-ui",
-      "designation": "Product Designer",
-      "barcodeValue": "SS40-EMP-3K99L1",
-      "pin": "5566",
-      "deviceToken": null,
-      "status": "ACTIVE",
-      "joinedAt": "2024-02-10",
-      "createdAt": "2024-02-10T09:00:00.000Z"
-    },
-    {
-      "id": "emp-004",
-      "employeeCode": "SS40-004",
-      "name": "Kumaravel Murugan",
-      "email": "kumar.m@ss40.network",
-      "phone": "+91 98765 43213",
-      "departmentId": "dept-ops",
-      "designation": "Cloud Infrastructure Admin",
-      "barcodeValue": "SS40-EMP-4V77M9",
-      "pin": "7788",
-      "deviceToken": null,
-      "status": "ACTIVE",
-      "joinedAt": "2024-04-05",
-      "createdAt": "2024-04-05T09:00:00.000Z"
-    },
-    {
-      "id": "emp-005",
-      "employeeCode": "SS40-005",
-      "name": "Sneha Mohan",
-      "email": "sneha.m@ss40.network",
-      "phone": "+91 98765 43214",
-      "departmentId": "dept-mkt",
-      "designation": "Growth Strategist",
-      "barcodeValue": "SS40-EMP-7R12W8",
-      "pin": "9900",
-      "deviceToken": null,
-      "status": "ACTIVE",
-      "joinedAt": "2024-05-20",
-      "createdAt": "2024-05-20T09:00:00.000Z"
-    }
-  ],
-  "sessions": [
-    {
-      "id": "sess-emp-002-2026-09-21",
-      "employeeId": "emp-002",
-      "officeId": "off-ss40-hq",
-      "attendanceDate": "2026-09-21",
-      "status": "LOGGED_IN",
-      "loginAt": "2026-09-21T06:27:01.705Z",
-      "logoutAt": null,
-      "totalWorkMinutes": 180,
-      "totalBreakMinutes": 0,
-      "totalLunchMinutes": 0,
-      "isLate": false,
-      "lateMinutes": 0,
-      "isMissedLogout": false,
-      "createdAt": "2026-09-21T09:27:01.705Z",
-      "updatedAt": "2026-09-21T09:27:01.705Z"
-    },
-    {
-      "id": "sess-emp-003-2026-09-21",
-      "employeeId": "emp-003",
-      "officeId": "off-ss40-hq",
-      "attendanceDate": "2026-09-21",
-      "status": "ON_LUNCH",
-      "loginAt": "2026-09-21T05:27:01.705Z",
-      "logoutAt": null,
-      "totalWorkMinutes": 200,
-      "totalBreakMinutes": 15,
-      "totalLunchMinutes": 25,
-      "isLate": false,
-      "lateMinutes": 0,
-      "isMissedLogout": false,
-      "createdAt": "2026-09-21T09:27:01.705Z",
-      "updatedAt": "2026-09-21T09:27:01.705Z"
-    }
-  ],
-  "events": [
-    {
-      "id": "ev-1",
-      "sessionId": "sess-emp-002-2026-09-21",
-      "employeeId": "emp-002",
-      "eventType": "LOGIN",
-      "eventTime": "2026-09-21T06:27:01.705Z",
-      "createdAt": "2026-09-21T06:27:01.705Z"
-    },
-    {
-      "id": "ev-2",
-      "sessionId": "sess-emp-003-2026-09-21",
-      "employeeId": "emp-003",
-      "eventType": "LOGIN",
-      "eventTime": "2026-09-21T05:27:01.705Z",
-      "createdAt": "2026-09-21T05:27:01.705Z"
-    },
-    {
-      "id": "ev-3",
-      "sessionId": "sess-emp-003-2026-09-21",
-      "employeeId": "emp-003",
-      "eventType": "LUNCH_START",
-      "eventTime": "2026-09-21T09:02:01.705Z",
-      "createdAt": "2026-09-21T09:27:01.705Z"
-    }
-  ]
+  "employees": [],
+  "sessions": [],
+  "events": []
 }

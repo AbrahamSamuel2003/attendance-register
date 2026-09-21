@@ -34,45 +34,12 @@ export class DatabaseStore {
     { id: 'dept-mkt', name: 'Marketing & Sales', code: 'MKT' },
   ];
 
-  public employees: Employee[] = [
-    {
-      id: 'emp-001',
-      employeeCode: 'SS40-001',
-      name: 'Abraham Samuel',
-      email: 'abraham@ss40.network',
-      phone: '+91 98765 43210',
-      departmentId: 'dept-eng',
-      designation: 'Senior Full Stack Lead',
-      barcodeValue: 'SS40-EMP-8F73K2',
-      pin: '1234',
-      deviceToken: null,
-      status: 'ACTIVE',
-      joinedAt: '2024-01-15',
-      createdAt: '2024-01-15T09:00:00.000Z',
-    },
-    {
-      id: 'emp-002',
-      employeeCode: 'SS40-002',
-      name: 'David Raj',
-      email: 'david.r@ss40.network',
-      phone: '+91 98765 43211',
-      departmentId: 'dept-eng',
-      designation: 'Frontend Engineer',
-      barcodeValue: 'SS40-EMP-9X21B4',
-      pin: '4321',
-      deviceToken: null,
-      status: 'ACTIVE',
-      joinedAt: '2024-03-01',
-      createdAt: '2024-03-01T09:00:00.000Z',
-    },
-  ];
-
+  public employees: Employee[] = [];
   public sessions: AttendanceSession[] = [];
   public events: AttendanceEvent[] = [];
   private initializedPromise: Promise<void> | null = null;
 
   private constructor() {
-    this.seedTodaySessions();
     this.loadFromDisk();
   }
 
@@ -93,7 +60,7 @@ export class DatabaseStore {
       }
 
       const emps = await getEmployeesFromSupabase();
-      if (emps && emps.length > 0) {
+      if (emps !== null) {
         this.employees = emps;
       }
     } catch (err) {
@@ -250,45 +217,7 @@ export class DatabaseStore {
     });
     return formatter.format(now);
   }
-
-  private seedTodaySessions() {
-    const today = this.getTodayDateIST();
-    if (!this.employees || this.employees.length < 2) return;
-
-    const emp2 = this.employees[1];
-    if (!emp2) return;
-
-    // David: Logged in at 09:30 AM
-    const sess2: AttendanceSession = {
-      id: `sess-${emp2.id}-${today}`,
-      employeeId: emp2.id,
-    
-      officeId: this.office.id,
-      attendanceDate: today,
-      status: 'LOGGED_IN',
-      loginAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-      logoutAt: null,
-      totalWorkMinutes: 180,
-      totalBreakMinutes: 0,
-      totalLunchMinutes: 0,
-      isLate: false,
-      lateMinutes: 0,
-      isMissedLogout: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    this.sessions.push(sess2);
-
-    this.events.push({
-      id: 'ev-1',
-      sessionId: sess2.id,
-      employeeId: emp2.id,
-      eventType: 'LOGIN',
-      eventTime: sess2.loginAt!,
-      createdAt: sess2.loginAt!,
-    });
-  }
 }
 
 export const db = DatabaseStore.getInstance();
+
