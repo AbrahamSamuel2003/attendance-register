@@ -72,6 +72,24 @@ export default function AdminEmployeesPage() {
     fetchEmployees();
   }, [fetchEmployees]);
 
+  // Audio Beep generator for scanner confirmation
+  const playBeep = () => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.frequency.setValueAtTime(800, ctx.currentTime);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+      }
+    } catch (_) {}
+  };
+
   // Start Camera for Admin ID Badge Scanner (Supports 1D Barcodes + QR codes)
   const startAdminBarcodeScanner = async () => {
     setIsScannerActive(true);
@@ -107,8 +125,10 @@ export default function AdminEmployeesPage() {
           aspectRatio: 1.777778,
         },
         (decodedText: string) => {
+          playBeep();
           stopAdminBarcodeScanner();
-          setNewEmpData((prev) => ({ ...prev, barcodeValue: decodedText.trim().toUpperCase() }));
+          const cleanCode = decodedText.trim().toUpperCase();
+          setNewEmpData((prev) => ({ ...prev, barcodeValue: cleanCode }));
         },
         () => {}
       );
@@ -430,20 +450,40 @@ export default function AdminEmployeesPage() {
                 )}
 
                 <div>
-                  <label className="block text-slate-600 text-[11px] font-medium mb-1">
-                    Barcode / ID Card Token (Scanned or Type Manually)
-                  </label>
-                  <input
-                    type="text"
-                    value={newEmpData.barcodeValue}
-                    onChange={(e) =>
-                      setNewEmpData({ ...newEmpData, barcodeValue: e.target.value.toUpperCase() })
-                    }
-                    placeholder="e.g. SS40-EMP-8F73K2 (or leave empty to auto-generate)"
-                    className="w-full px-3 py-2 rounded-xl bg-white text-slate-900 text-xs font-mono border border-slate-300"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Tip: Scanning physical ID badge guarantees 1:1 hardware card matching.
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-slate-700 text-xs font-semibold">
+                      ID Card Barcode Number / Token
+                    </label>
+                    {newEmpData.barcodeValue && (
+                      <span className="text-[11px] font-semibold text-emerald-600 flex items-center space-x-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Card Scanned</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={newEmpData.barcodeValue}
+                      onChange={(e) =>
+                        setNewEmpData({ ...newEmpData, barcodeValue: e.target.value.toUpperCase() })
+                      }
+                      placeholder="e.g. SS40-EMP-8F73K2 (or scan card above)"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white text-slate-900 text-xs font-mono font-bold border border-slate-300 focus:border-blue-500"
+                    />
+                    {newEmpData.barcodeValue && (
+                      <button
+                        type="button"
+                        onClick={() => setNewEmpData({ ...newEmpData, barcodeValue: '' })}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs p-1"
+                        title="Clear barcode"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    When you scan the physical ID card, the decoded code appears above and links directly to this employee upon registration.
                   </p>
                 </div>
               </div>
