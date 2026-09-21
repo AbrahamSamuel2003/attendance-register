@@ -219,14 +219,17 @@ export default function AttendanceMobilePage() {
     );
   }, [verifyLocationWithServer]);
 
+  const isManualSimulateRef = useRef(false);
+
   useEffect(() => {
     requestGPS();
 
-    // Auto-listen for location updates (triggers instantly when user taps "Turn on" in Android/Google dialog)
+    // Auto-listen for location updates (triggers when user moves or taps "Turn on")
     let watchId: number | null = null;
     if (navigator.geolocation) {
       watchId = navigator.geolocation.watchPosition(
         (pos) => {
+          if (isManualSimulateRef.current) return; // Do not override if manual simulation was activated
           const { latitude, longitude, accuracy } = pos.coords;
           setCoords({ lat: latitude, lng: longitude, accuracy });
           verifyLocationWithServer(latitude, longitude);
@@ -245,6 +248,7 @@ export default function AttendanceMobilePage() {
 
   // Quick Demo GPS simulator (for development/desktop ease)
   const simulateOfficeGPS = async () => {
+    isManualSimulateRef.current = true;
     try {
       const res = await fetch('/api/admin/settings');
       const data = await res.json();
