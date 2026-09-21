@@ -40,3 +40,5 @@ next-env.d.ts
 # Antigravity / Gemini artifacts
 .gemini
 .system_generated
+scratch/
+
