@@ -147,6 +147,73 @@ export async function deleteEmployeeFromSupabase(id: string): Promise<boolean> {
 }
 
 /**
+ * Fetch Attendance Sessions from Supabase (defaults to today's IST date)
+ */
+export async function getSessionsFromSupabase(date?: string): Promise<AttendanceSession[] | null> {
+  if (!supabase) return null;
+  try {
+    let query = supabase.from('attendance_sessions').select('*');
+    if (date) {
+      query = query.eq('attendance_date', date);
+    }
+    const { data, error } = await query;
+    if (error || !data) return null;
+
+    return data.map((d: any) => ({
+      id: d.id,
+      employeeId: d.employee_id,
+      officeId: d.office_id,
+      attendanceDate: d.attendance_date,
+      status: d.status,
+      loginAt: d.login_at,
+      logoutAt: d.logout_at,
+      totalWorkMinutes: d.total_work_minutes || 0,
+      totalBreakMinutes: d.total_break_minutes || 0,
+      totalLunchMinutes: d.total_lunch_minutes || 0,
+      isLate: !!d.is_late,
+      lateMinutes: d.late_minutes || 0,
+      isMissedLogout: !!d.is_missed_logout,
+      createdAt: d.created_at || d.login_at,
+      updatedAt: d.updated_at,
+    }));
+  } catch (err) {
+    console.warn('Supabase fetch sessions error:', err);
+    return null;
+  }
+}
+
+/**
+ * Fetch Attendance Events from Supabase
+ */
+export async function getEventsFromSupabase(sessionId?: string): Promise<AttendanceEvent[] | null> {
+  if (!supabase) return null;
+  try {
+    let query = supabase.from('attendance_events').select('*').order('event_time', { ascending: true });
+    if (sessionId) {
+      query = query.eq('session_id', sessionId);
+    }
+    const { data, error } = await query;
+    if (error || !data) return null;
+
+    return data.map((d: any) => ({
+      id: d.id,
+      sessionId: d.session_id,
+      employeeId: d.employee_id,
+      eventType: d.event_type,
+      eventTime: d.event_time,
+      latitude: d.latitude,
+      longitude: d.longitude,
+      deviceToken: d.device_token,
+      notes: d.notes,
+      createdAt: d.created_at || d.event_time,
+    }));
+  } catch (err) {
+    console.warn('Supabase fetch events error:', err);
+    return null;
+  }
+}
+
+/**
  * Save Attendance Session to Supabase
  */
 export async function saveSessionToSupabase(session: AttendanceSession): Promise<boolean> {
@@ -191,6 +258,10 @@ export async function saveEventToSupabase(event: AttendanceEvent): Promise<boole
         employee_id: event.employeeId,
         event_type: event.eventType,
         event_time: event.eventTime,
+        latitude: event.latitude,
+        longitude: event.longitude,
+        device_token: event.deviceToken,
+        notes: event.notes,
       },
       { onConflict: 'id' }
     );

@@ -243,7 +243,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navItems = [
-    { name: 'Live Roster', href: '/admin/dashboard', icon: Activity, badge: 'Live' },
+    { name: 'Dashboard', href: '/admin/dashboard', icon: Activity, badge: 'Live' },
     { name: 'Employees', href: '/admin/employees', icon: Users },
     { name: 'Reports', href: '/admin/reports', icon: FileSpreadsheet },
     { name: 'Settings & Security', href: '/admin/settings', icon: Settings },

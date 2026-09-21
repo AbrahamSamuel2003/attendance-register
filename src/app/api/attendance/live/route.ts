@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { AttendanceSummaryKPI, LiveAttendanceRecord } from '@/types';
+import { recalculateSessionDurations } from '@/lib/state-machine';
 
 export async function GET() {
   try {
@@ -10,12 +11,26 @@ export async function GET() {
     const departmentsMap = new Map(db.departments.map((d) => [d.id, d]));
 
     const liveRecords: LiveAttendanceRecord[] = employees.map((emp) => {
-      const session =
+      let session =
         db.sessions.find((s) => s.employeeId === emp.id && s.attendanceDate === today) || null;
 
-      const todayEvents = session
-        ? db.events.filter((ev) => ev.sessionId === session.id)
+      const sessionId = session ? session.id : null;
+      const todayEvents = sessionId
+        ? [...db.events.filter((ev) => ev.sessionId === sessionId)].sort(
+            (a, b) => new Date(a.eventTime).getTime() - new Date(b.eventTime).getTime()
+          )
         : [];
+
+      // If session is active, compute live running durations
+      if (session && todayEvents.length > 0) {
+        const liveDurations = recalculateSessionDurations(todayEvents);
+        session = {
+          ...session,
+          totalWorkMinutes: liveDurations.totalWorkMinutes,
+          totalBreakMinutes: liveDurations.totalBreakMinutes,
+          totalLunchMinutes: liveDurations.totalLunchMinutes,
+        };
+      }
 
       const lastEvent = todayEvents.length > 0 ? todayEvents[todayEvents.length - 1] : null;
 

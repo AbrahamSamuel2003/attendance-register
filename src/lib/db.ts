@@ -5,6 +5,8 @@ import {
   getEmployeesFromSupabase,
   saveEmployeeToSupabase,
   deleteEmployeeFromSupabase,
+  getSessionsFromSupabase,
+  getEventsFromSupabase,
   saveSessionToSupabase,
   saveEventToSupabase,
 } from './supabase';
@@ -62,6 +64,33 @@ export class DatabaseStore {
       const emps = await getEmployeesFromSupabase();
       if (emps !== null) {
         this.employees = emps;
+      }
+
+      // Sync today's sessions and all events from Supabase
+      const today = this.getTodayDateIST();
+      const sessions = await getSessionsFromSupabase(today);
+      if (sessions !== null && sessions.length > 0) {
+        // Merge or replace sessions
+        for (const s of sessions) {
+          const idx = this.sessions.findIndex((existing) => existing.id === s.id);
+          if (idx >= 0) {
+            this.sessions[idx] = s;
+          } else {
+            this.sessions.push(s);
+          }
+        }
+      }
+
+      const events = await getEventsFromSupabase();
+      if (events !== null && events.length > 0) {
+        for (const ev of events) {
+          const idx = this.events.findIndex((existing) => existing.id === ev.id);
+          if (idx >= 0) {
+            this.events[idx] = ev;
+          } else {
+            this.events.push(ev);
+          }
+        }
       }
     } catch (err) {
       console.warn('Supabase sync warning:', err);

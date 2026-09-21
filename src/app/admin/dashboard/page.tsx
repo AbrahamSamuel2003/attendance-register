@@ -96,9 +96,9 @@ export default function AdminDashboardPage() {
     <div className="space-y-6">
       {/* KPI Header & Refresh */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-bold text-slate-900">Live Attendance Roster</h1>
-          <p className="text-xs text-slate-500">Real-time daily shift tracking for SS40 Network</p>
+        <div className="min-w-0">
+          <h1 className="text-lg font-bold text-slate-900 truncate">Attendance Dashboard</h1>
+          <p className="text-xs text-slate-500">Real-time daily shift tracking & workforce analytics</p>
         </div>
 
         <button
@@ -212,7 +212,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* 1. Mobile Card Grid View (Visible on < 768px) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 md:hidden">
         {filteredRecords.length === 0 ? (
           <div className="col-span-full p-8 text-center bg-white rounded-2xl border border-slate-200 text-xs text-slate-500">
             No employees match the selected criteria.
@@ -230,19 +230,28 @@ export default function AdminDashboardPage() {
                 })
               : '--:--';
 
+            const logoutTime = session?.logoutAt
+              ? new Date(session.logoutAt).toLocaleTimeString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })
+              : '--:--';
+
             return (
               <div
                 key={rec.employee.id}
-                className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-3 min-w-0"
+                onClick={() => setEventHistoryModal(rec)}
+                className="p-4 rounded-2xl bg-white border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all space-y-3 min-w-0 cursor-pointer group"
               >
                 {/* Header: Avatar, Name, Status Pill */}
                 <div className="flex items-start justify-between gap-2 min-w-0">
                   <div className="flex items-center space-x-2.5 min-w-0 flex-1">
-                    <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-sm shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                       {rec.employee.name.charAt(0)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <span className="font-bold text-slate-900 text-xs block truncate">
+                      <span className="font-bold text-slate-900 text-xs block truncate group-hover:text-blue-600 transition-colors">
                         {rec.employee.name}
                       </span>
                       <span className="text-[10px] text-slate-500 font-mono block truncate">
@@ -272,49 +281,44 @@ export default function AdminDashboardPage() {
 
                 {/* Shift Metrics Grid */}
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-[11px]">
-                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
-                    <span className="text-[10px] text-slate-500 block">Login Time</span>
-                    <span className="font-mono font-bold text-slate-800 truncate block">
-                      {loginTime}
-                      {session?.isLate && (
-                        <span className="text-[9px] text-amber-600 ml-1 font-sans">
-                          (Late {session.lateMinutes}m)
-                        </span>
-                      )}
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+                    <span className="text-[10px] text-slate-500 block">Login / Logout</span>
+                    <span className="font-mono font-bold text-slate-800 truncate block text-[11px]">
+                      {loginTime} {session?.logoutAt ? `→ ${logoutTime}` : ''}
                     </span>
+                    {session?.isLate && (
+                      <span className="text-[9px] text-amber-600 font-sans block truncate">
+                        Late Arrival ({session.lateMinutes}m)
+                      </span>
+                    )}
                   </div>
 
-                  <div className="p-2 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
+                  <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100 min-w-0">
                     <span className="text-[10px] text-slate-500 block">Work Time</span>
-                    <span className="font-bold text-slate-900 truncate block">
+                    <span className="font-bold text-slate-900 truncate block text-[11px]">
                       {session ? `${(session.totalWorkMinutes / 60).toFixed(1)}h` : '--'}
-                      {session && (
-                        <span className="text-[9px] text-slate-400 font-normal ml-1">
-                          (Brk {session.totalBreakMinutes + session.totalLunchMinutes}m)
-                        </span>
-                      )}
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-normal block truncate">
+                      Break: {session?.totalBreakMinutes || 0}m | Lunch: {session?.totalLunchMinutes || 0}m
                     </span>
                   </div>
                 </div>
 
-                {/* Footer: Department, Device & Audit Button */}
+                {/* Footer: Department, Device & View Details */}
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
                   <div className="min-w-0 flex-1 pr-2">
-                    <span className="text-[10px] font-semibold text-slate-500 block truncate">
+                    <span className="text-[10px] font-semibold text-slate-600 block truncate">
                       {rec.department.name}
                     </span>
                     <span className="text-[10px] text-slate-400 flex items-center space-x-1 truncate">
                       <Smartphone className="w-3 h-3 text-slate-400 shrink-0" />
-                      <span>{rec.employee.deviceToken ? 'Bound' : 'Pending Scan'}</span>
+                      <span>{rec.employee.deviceToken ? 'Device Bound' : 'Pending Scan'}</span>
                     </span>
                   </div>
 
-                  <button
-                    onClick={() => setEventHistoryModal(rec)}
-                    className="py-1.5 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold shrink-0 transition-colors"
-                  >
-                    Audit Log
-                  </button>
+                  <span className="text-[11px] text-blue-600 font-semibold group-hover:underline shrink-0">
+                    View Details →
+                  </span>
                 </div>
               </div>
             );
@@ -358,7 +362,11 @@ export default function AdminDashboardPage() {
                     : '--:--';
 
                   return (
-                    <tr key={rec.employee.id} className="hover:bg-slate-50/80 transition-colors">
+                    <tr
+                      key={rec.employee.id}
+                      onClick={() => setEventHistoryModal(rec)}
+                      className="hover:bg-blue-50/40 transition-colors cursor-pointer"
+                    >
                       {/* Employee */}
                       <td className="py-3.5 px-4 min-w-[200px]">
                         <div className="flex items-center space-x-3">
@@ -366,7 +374,7 @@ export default function AdminDashboardPage() {
                             {rec.employee.name.charAt(0)}
                           </div>
                           <div className="min-w-0">
-                            <span className="font-bold text-slate-900 block truncate">
+                            <span className="font-bold text-slate-900 block truncate hover:text-blue-600">
                               {rec.employee.name}
                             </span>
                             <span className="text-[10px] font-mono text-slate-500 truncate block">
@@ -441,12 +449,15 @@ export default function AdminDashboardPage() {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-3.5 px-4 text-right space-x-2">
+                      <td className="py-3.5 px-4 text-right">
                         <button
-                          onClick={() => setEventHistoryModal(rec)}
-                          className="py-1 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEventHistoryModal(rec);
+                          }}
+                          className="py-1 px-3 rounded-lg bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 text-[11px] font-semibold transition-colors"
                         >
-                          Audit Log
+                          Audit Details
                         </button>
                       </td>
                     </tr>
@@ -458,60 +469,228 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* MODAL: AUDIT EVENT HISTORY */}
+      {/* MODAL: COMPREHENSIVE EMPLOYEE SHIFT & AUDIT DETAIL OVERLAY */}
       {eventHistoryModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 max-w-md w-full space-y-4 shadow-xl max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 pr-2">
-                <h3 className="text-sm font-bold text-slate-900 truncate">
-                  Audit History: {eventHistoryModal.employee.name}
-                </h3>
-                <p className="text-[11px] text-slate-500">Today's sequential attendance events</p>
+        <div
+          onClick={() => setEventHistoryModal(null)}
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fadeIn"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto"
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
+                  {eventHistoryModal.employee.name.charAt(0)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base font-bold text-slate-900 truncate">
+                    {eventHistoryModal.employee.name}
+                  </h3>
+                  <p className="text-xs text-slate-500 truncate">
+                    {eventHistoryModal.employee.designation} • {eventHistoryModal.department.name}
+                  </p>
+                  <span className="text-[10px] font-mono text-blue-600 font-bold">
+                    ID: {eventHistoryModal.employee.employeeCode}
+                  </span>
+                </div>
               </div>
+
               <button
                 onClick={() => setEventHistoryModal(null)}
-                className="p-1 rounded-lg bg-slate-100 text-slate-500 hover:text-slate-800 text-xs shrink-0"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
               >
                 ✕
               </button>
             </div>
 
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-              {eventHistoryModal.todayEvents.length === 0 ? (
-                <p className="text-xs text-slate-500 text-center py-6">
-                  No attendance events recorded today yet.
-                </p>
-              ) : (
-                eventHistoryModal.todayEvents.map((ev, idx) => (
-                  <div
-                    key={ev.id || idx}
-                    className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs"
-                  >
-                    <div className="min-w-0 pr-2">
-                      <span className="font-bold text-slate-900 block">{ev.eventType}</span>
-                      <span className="text-[10px] text-slate-500 truncate block">
-                        {ev.notes || 'Normal mobile punch'}
-                      </span>
-                    </div>
-                    <span className="font-mono text-blue-600 text-xs font-semibold shrink-0">
-                      {new Date(ev.eventTime).toLocaleTimeString('en-IN', {
+            {/* Current Shift Summary Cards */}
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-100 text-center min-w-0">
+                <span className="text-[10px] text-blue-600 font-semibold block uppercase tracking-wider">
+                  Net Work
+                </span>
+                <span className="text-lg font-extrabold text-blue-900 block font-mono">
+                  {eventHistoryModal.session
+                    ? `${(eventHistoryModal.session.totalWorkMinutes / 60).toFixed(1)}h`
+                    : '--'}
+                </span>
+                <span className="text-[10px] text-blue-500">
+                  {eventHistoryModal.session?.totalWorkMinutes || 0} mins
+                </span>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-100 text-center min-w-0">
+                <span className="text-[10px] text-amber-700 font-semibold block uppercase tracking-wider">
+                  Break Time
+                </span>
+                <span className="text-lg font-extrabold text-amber-900 block font-mono">
+                  {eventHistoryModal.session?.totalBreakMinutes || 0}m
+                </span>
+                <span className="text-[10px] text-amber-600">Short Break</span>
+              </div>
+
+              <div className="p-3 rounded-2xl bg-orange-50/70 border border-orange-100 text-center min-w-0">
+                <span className="text-[10px] text-orange-700 font-semibold block uppercase tracking-wider">
+                  Lunch Time
+                </span>
+                <span className="text-lg font-extrabold text-orange-900 block font-mono">
+                  {eventHistoryModal.session?.totalLunchMinutes || 0}m
+                </span>
+                <span className="text-[10px] text-orange-600">Lunch Hour</span>
+              </div>
+            </div>
+
+            {/* Shift Status & Timing Overview */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+              <div className="flex justify-between items-center text-slate-700">
+                <span className="font-semibold text-slate-500">Current Status:</span>
+                <span
+                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                    (eventHistoryModal.session?.status || 'NOT_STARTED') === 'LOGGED_IN'
+                      ? 'bg-emerald-100 text-emerald-800'
+                      : (eventHistoryModal.session?.status || 'NOT_STARTED') === 'ON_BREAK'
+                      ? 'bg-amber-100 text-amber-800'
+                      : (eventHistoryModal.session?.status || 'NOT_STARTED') === 'ON_LUNCH'
+                      ? 'bg-orange-100 text-orange-800'
+                      : (eventHistoryModal.session?.status || 'NOT_STARTED') === 'LOGGED_OUT'
+                      ? 'bg-slate-200 text-slate-800'
+                      : 'bg-rose-100 text-rose-800'
+                  }`}
+                >
+                  {(eventHistoryModal.session?.status || 'NOT_STARTED').replace('_', ' ')}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center text-slate-700">
+                <span className="font-semibold text-slate-500">Login Time:</span>
+                <span className="font-mono font-bold text-slate-900">
+                  {eventHistoryModal.session?.loginAt
+                    ? new Date(eventHistoryModal.session.loginAt).toLocaleTimeString('en-IN', {
                         timeZone: 'Asia/Kolkata',
                         hour: '2-digit',
                         minute: '2-digit',
                         second: '2-digit',
-                      })}
+                      })
+                    : '--:--:--'}
+                  {eventHistoryModal.session?.isLate && (
+                    <span className="text-amber-600 ml-1 font-sans text-[11px]">
+                      (Late by {eventHistoryModal.session.lateMinutes}m)
                     </span>
+                  )}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center text-slate-700">
+                <span className="font-semibold text-slate-500">Logout Time:</span>
+                <span className="font-mono font-bold text-slate-900">
+                  {eventHistoryModal.session?.logoutAt
+                    ? new Date(eventHistoryModal.session.logoutAt).toLocaleTimeString('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                      })
+                    : '--:--:-- (In Progress)'}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center text-slate-700">
+                <span className="font-semibold text-slate-500">Canva Barcode/QR:</span>
+                <span className="font-mono font-semibold text-slate-900">
+                  {eventHistoryModal.employee.barcodeValue}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center text-slate-700">
+                <span className="font-semibold text-slate-500">Device Lock:</span>
+                <span
+                  className={`font-semibold ${
+                    eventHistoryModal.employee.deviceToken ? 'text-emerald-700' : 'text-amber-700'
+                  }`}
+                >
+                  {eventHistoryModal.employee.deviceToken ? 'Bound & Verified' : 'Pending 1st Scan'}
+                </span>
+              </div>
+            </div>
+
+            {/* Sequential Shift Events Timeline */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center justify-between">
+                <span>Shift Event Timeline ({eventHistoryModal.todayEvents.length})</span>
+                <span className="text-[10px] text-slate-400 normal-case font-normal">
+                  Ordered chronologically
+                </span>
+              </h4>
+
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {eventHistoryModal.todayEvents.length === 0 ? (
+                  <div className="p-4 rounded-xl bg-slate-50 text-center text-xs text-slate-400 border border-slate-100">
+                    No attendance events recorded today yet.
                   </div>
-                ))
-              )}
+                ) : (
+                  eventHistoryModal.todayEvents.map((ev, idx) => {
+                    const eventConfig: Record<string, { label: string; color: string }> = {
+                      LOGIN: { label: 'Day Check-In / Shift Start', color: 'bg-emerald-500 text-white' },
+                      BREAK_START: { label: 'Started Short Break', color: 'bg-amber-500 text-white' },
+                      BREAK_END: { label: 'Ended Short Break', color: 'bg-emerald-600 text-white' },
+                      LUNCH_START: { label: 'Started Lunch Break', color: 'bg-orange-500 text-white' },
+                      LUNCH_END: { label: 'Ended Lunch Break', color: 'bg-emerald-600 text-white' },
+                      LOGOUT: { label: 'Shift Completed / Logged Out', color: 'bg-slate-700 text-white' },
+                      AUTO_CLOSE_MIDNIGHT: {
+                        label: 'Auto-Closed at Midnight',
+                        color: 'bg-purple-600 text-white',
+                      },
+                    };
+
+                    const cfg = eventConfig[ev.eventType] || {
+                      label: ev.eventType,
+                      color: 'bg-blue-600 text-white',
+                    };
+
+                    return (
+                      <div
+                        key={ev.id || idx}
+                        className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs gap-2"
+                      >
+                        <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                          <div
+                            className={`w-6 h-6 rounded-lg ${cfg.color} flex items-center justify-center font-bold text-[10px] shrink-0`}
+                          >
+                            {idx + 1}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <span className="font-bold text-slate-900 block truncate">
+                              {cfg.label}
+                            </span>
+                            <span className="text-[10px] text-slate-500 truncate block">
+                              {ev.notes || 'Biometric / Geofence verified'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="font-mono text-blue-600 font-bold text-xs shrink-0">
+                          {new Date(ev.eventTime).toLocaleTimeString('en-IN', {
+                            timeZone: 'Asia/Kolkata',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                          })}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
 
             <button
               onClick={() => setEventHistoryModal(null)}
-              className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+              className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-colors"
             >
-              Close
+              Close Details
             </button>
           </div>
         </div>
