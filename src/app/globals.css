@@ -2,14 +2,14 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --background: 40 33% 97%;
+    --foreground: 24 10% 10%;
+    --card: 45 30% 99%;
+    --card-foreground: 24 10% 10%;
     --primary: 221 83% 53%;
-    --primary-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --radius: 0.75rem;
+    --primary-foreground: 40 33% 98%;
+    --border: 38 20% 88%;
+    --radius: 0.875rem;
   }
 }
 
@@ -18,19 +18,19 @@
 }
 
 body {
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: #fbf9f4; /* Warm luxury cream background */
+  color: #1c1917;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
 }
 
-/* Light Card Panels */
+/* Cream Light Card Panels */
 .light-panel {
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e7dfd5;
+  box-shadow: 0 1px 3px 0 rgba(28, 25, 23, 0.04), 0 1px 2px -1px rgba(28, 25, 23, 0.04);
 }
 
 .light-card-hover {
@@ -38,15 +38,15 @@ body {
 }
 
 .light-card-hover:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  border-color: #2563eb;
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.08), 0 8px 10px -6px rgba(37, 99, 235, 0.04);
   transform: translateY(-2px);
 }
 
 .light-input {
   background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
+  border: 1px solid #ded6ca;
+  color: #1c1917;
   transition: all 0.15s ease-in-out;
 }
 
@@ -63,14 +63,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f4efe6;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #d6ccbe;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #b8aba7;
 }

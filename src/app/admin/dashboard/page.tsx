@@ -596,24 +596,6 @@ export default function AdminDashboardPage() {
                     : '--:--:-- (In Progress)'}
                 </span>
               </div>
-
-              <div className="flex justify-between items-center text-slate-700">
-                <span className="font-semibold text-slate-500">Canva Barcode/QR:</span>
-                <span className="font-mono font-semibold text-slate-900">
-                  {eventHistoryModal.employee.barcodeValue}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center text-slate-700">
-                <span className="font-semibold text-slate-500">Device Lock:</span>
-                <span
-                  className={`font-semibold ${
-                    eventHistoryModal.employee.deviceToken ? 'text-emerald-700' : 'text-amber-700'
-                  }`}
-                >
-                  {eventHistoryModal.employee.deviceToken ? 'Bound & Verified' : 'Pending 1st Scan'}
-                </span>
-              </div>
             </div>
 
             {/* Sequential Shift Events Timeline */}

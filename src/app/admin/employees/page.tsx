@@ -534,12 +534,12 @@ export default function AdminEmployeesPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-slate-700 text-xs font-semibold">
-                      Canva ID Card Code / Barcode / QR
+                      ID Card Code / Barcode / QR Value
                     </label>
                     {newEmpData.barcodeValue && (
                       <span className="text-[11px] font-semibold text-emerald-600 flex items-center space-x-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                         <CheckCircle2 className="w-3 h-3" />
-                        <span>Card Code Captured</span>
+                        <span>Code Captured</span>
                       </span>
                     )}
                   </div>
@@ -566,7 +566,7 @@ export default function AdminEmployeesPage() {
                     )}
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1">
-                    Scan via Live Camera / Snap Photo, or scan with a USB barcode gun, or type the code you created in Canva.
+                    Scan via Live Camera / Snap Photo, scan with a USB barcode scanner gun, or enter the ID code directly.
                   </p>
                 </div>
               </div>
