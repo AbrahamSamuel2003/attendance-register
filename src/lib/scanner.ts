@@ -44,6 +44,13 @@ export async function decodeBarcodeFromFile(file: File): Promise<string> {
   }
 
   // 2. Fallback to Html5Qrcode file scan
+  if (typeof document !== 'undefined' && !document.getElementById('scanner-file-detector-temp')) {
+    const tempDiv = document.createElement('div');
+    tempDiv.id = 'scanner-file-detector-temp';
+    tempDiv.style.display = 'none';
+    document.body.appendChild(tempDiv);
+  }
+
   const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
   const formats = [
     Html5QrcodeSupportedFormats.CODE_128,
@@ -68,7 +75,9 @@ export async function decodeBarcodeFromFile(file: File): Promise<string> {
     html5QrCode.clear();
     return result.trim();
   } catch (err: any) {
-    html5QrCode.clear();
-    throw new Error('Could not detect barcode from image. Please ensure the barcode is clearly visible and well-lit.');
+    try {
+      html5QrCode.clear();
+    } catch (_) {}
+    throw new Error('Could not detect barcode or QR code from photo. Please ensure clear focus and good lighting.');
   }
 }

@@ -13,12 +13,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Barcode value is required' }, { status: 400 });
     }
 
-    // 1. Find employee by barcodeValue or employeeCode
-    const cleanInput = barcodeValue.trim().toUpperCase();
+    // 1. Find employee by barcodeValue, employeeCode, or URL-embedded code
+    let cleanInput = barcodeValue.trim().toUpperCase();
+    
+    // If QR code contains a URL, extract code parameter or path end
+    if (cleanInput.includes('CODE=')) {
+      const match = cleanInput.match(/CODE=([^&]+)/);
+      if (match) cleanInput = decodeURIComponent(match[1]).trim().toUpperCase();
+    } else if (cleanInput.includes('/')) {
+      const parts = cleanInput.split('/');
+      const lastPart = parts[parts.length - 1].trim().toUpperCase();
+      if (lastPart) cleanInput = lastPart;
+    }
+
     const employee = db.employees.find(
       (e) =>
         e.barcodeValue.trim().toUpperCase() === cleanInput ||
-        e.employeeCode.trim().toUpperCase() === cleanInput
+        e.employeeCode.trim().toUpperCase() === cleanInput ||
+        (cleanInput.length >= 4 && e.barcodeValue.trim().toUpperCase().includes(cleanInput)) ||
+        (e.barcodeValue.trim().length >= 4 && cleanInput.includes(e.barcodeValue.trim().toUpperCase()))
     );
 
     if (!employee) {
