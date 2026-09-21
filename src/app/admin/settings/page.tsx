@@ -362,7 +362,7 @@ export default function AdminSettingsPage() {
                   onChange={(e) =>
                     setChangePassForm({ ...changePassForm, currentPassword: e.target.value })
                   }
-                  placeholder="Enter current password (default: 654321)"
+                  placeholder="Enter current password"
                   className="w-full pl-3.5 pr-10 py-2.5 rounded-xl light-input text-xs"
                   required
                 />

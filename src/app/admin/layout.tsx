@@ -135,7 +135,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return;
       }
 
-      throw new Error(data.error || 'Incorrect admin password. Default is 654321');
+      throw new Error(data.error || 'Incorrect admin password. Please try again.');
     } catch (err: any) {
       if (cleanPassword === '654321') {
         try {
@@ -144,7 +144,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         } catch (_) {}
         setIsAuthenticated(true);
       } else {
-        setAuthError(err.message || 'Incorrect admin password. Default is 654321');
+        setAuthError(err.message || 'Incorrect admin password. Please try again.');
       }
     } finally {
       setIsVerifyingAuth(false);
@@ -169,10 +169,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4">
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 max-w-sm w-full space-y-5 shadow-sm">
+      <div className="min-h-screen bg-[#fbf9f4] flex flex-col justify-center items-center p-4">
+        <div className="bg-white border border-[#e8dfd2] rounded-3xl p-6 sm:p-8 max-w-sm w-full space-y-5 shadow-sm">
           <div className="text-center space-y-2">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center border border-blue-100">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 mx-auto flex items-center justify-center border border-blue-100 shadow-2xs">
               <Shield className="w-6 h-6" />
             </div>
             <h2 className="text-lg font-bold text-slate-900">Admin Authentication</h2>
@@ -191,7 +191,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   type={showPassword ? 'text' : 'password'}
                   value={authPasswordInput}
                   onChange={(e) => setAuthPasswordInput(e.target.value)}
-                  placeholder="Enter password (default: 654321)"
+                  placeholder="Enter admin password"
                   className="w-full pl-3.5 pr-12 py-3 rounded-xl light-input text-sm text-slate-900"
                   inputMode="text"
                   autoComplete="current-password"
@@ -219,7 +219,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="flex space-x-2 pt-1">
               <Link
                 href="/"
-                className="w-1/2 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs font-semibold text-center transition-colors flex items-center justify-center"
+                className="w-1/2 py-3 rounded-xl bg-[#f4efe6] hover:bg-[#eae3d5] text-slate-700 text-xs font-semibold text-center transition-colors flex items-center justify-center"
               >
                 Back to Home
               </Link>
@@ -232,11 +232,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </button>
             </div>
           </form>
-          <div className="text-center">
-            <span className="inline-block text-[11px] px-2.5 py-1 bg-slate-100 rounded-md text-slate-600 font-mono">
-              Default Password: 654321
-            </span>
-          </div>
         </div>
       </div>
     );
