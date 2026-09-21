@@ -477,19 +477,19 @@ export default function AdminDashboardPage() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white border border-slate-200 rounded-3xl p-5 sm:p-6 max-w-lg w-full space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto"
+            className="bg-[#fdfcf9] border border-[#e8dfd2] rounded-3xl p-5 sm:p-6 max-w-lg w-full shadow-2xl max-h-[88vh] flex flex-col overflow-hidden"
           >
-            {/* Modal Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-4">
+            {/* Modal Header (Fixed at top) */}
+            <div className="flex items-start justify-between gap-3 border-b border-[#ebe1d3] pb-4 shrink-0">
               <div className="flex items-center space-x-3 min-w-0 flex-1">
-                <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 text-blue-700 flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
                   {eventHistoryModal.employee.name.charAt(0)}
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-base font-bold text-slate-900 truncate">
                     {eventHistoryModal.employee.name}
                   </h3>
-                  <p className="text-xs text-slate-500 truncate">
+                  <p className="text-xs text-[#786b59] truncate">
                     {eventHistoryModal.employee.designation} • {eventHistoryModal.department.name}
                   </p>
                   <span className="text-[10px] font-mono text-blue-600 font-bold">
@@ -500,180 +500,186 @@ export default function AdminDashboardPage() {
 
               <button
                 onClick={() => setEventHistoryModal(null)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
+                className="w-8 h-8 rounded-full bg-[#f4efe6] hover:bg-[#eae3d5] text-slate-600 flex items-center justify-center text-xs font-bold shrink-0 transition-colors"
               >
                 ✕
               </button>
             </div>
 
-            {/* Current Shift Summary Cards */}
-            <div className="grid grid-cols-3 gap-2.5">
-              <div className="p-3 rounded-2xl bg-blue-50/70 border border-blue-100 text-center min-w-0">
-                <span className="text-[10px] text-blue-600 font-semibold block uppercase tracking-wider">
-                  Net Work
-                </span>
-                <span className="text-lg font-extrabold text-blue-900 block font-mono">
-                  {eventHistoryModal.session
-                    ? `${(eventHistoryModal.session.totalWorkMinutes / 60).toFixed(1)}h`
-                    : '--'}
-                </span>
-                <span className="text-[10px] text-blue-500">
-                  {eventHistoryModal.session?.totalWorkMinutes || 0} mins
-                </span>
+            {/* Scrollable Content Body (Single Smooth Scrollbar) */}
+            <div className="space-y-4 overflow-y-auto custom-scrollbar flex-1 py-4 pr-1">
+              {/* Current Shift Summary Cards */}
+              <div className="grid grid-cols-3 gap-2.5">
+                <div className="p-3 rounded-2xl bg-[#f4f7fc] border border-[#d6e2f5] text-center min-w-0 shadow-2xs">
+                  <span className="text-[10px] text-blue-600 font-bold block uppercase tracking-wider">
+                    Net Work
+                  </span>
+                  <span className="text-lg font-extrabold text-blue-900 block font-mono">
+                    {eventHistoryModal.session
+                      ? `${(eventHistoryModal.session.totalWorkMinutes / 60).toFixed(1)}h`
+                      : '--'}
+                  </span>
+                  <span className="text-[10px] text-blue-600/80">
+                    {eventHistoryModal.session?.totalWorkMinutes || 0} mins
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-[#fbf7f0] border border-[#ebe1d3] text-center min-w-0 shadow-2xs">
+                  <span className="text-[10px] text-[#8a7b68] font-bold block uppercase tracking-wider">
+                    Break Time
+                  </span>
+                  <span className="text-lg font-extrabold text-[#4a3f31] block font-mono">
+                    {eventHistoryModal.session?.totalBreakMinutes || 0}m
+                  </span>
+                  <span className="text-[10px] text-[#8a7b68]">Short Break</span>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-[#f0f9f4] border border-[#d1ebd9] text-center min-w-0 shadow-2xs">
+                  <span className="text-[10px] text-emerald-700 font-bold block uppercase tracking-wider">
+                    Lunch Time
+                  </span>
+                  <span className="text-lg font-extrabold text-emerald-900 block font-mono">
+                    {eventHistoryModal.session?.totalLunchMinutes || 0}m
+                  </span>
+                  <span className="text-[10px] text-emerald-700/80">Lunch Hour</span>
+                </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-amber-50/70 border border-amber-100 text-center min-w-0">
-                <span className="text-[10px] text-amber-700 font-semibold block uppercase tracking-wider">
-                  Break Time
-                </span>
-                <span className="text-lg font-extrabold text-amber-900 block font-mono">
-                  {eventHistoryModal.session?.totalBreakMinutes || 0}m
-                </span>
-                <span className="text-[10px] text-amber-600">Short Break</span>
+              {/* Shift Status & Timing Overview */}
+              <div className="p-3.5 rounded-2xl bg-[#fbf8f2] border border-[#ebe1d3] space-y-2 text-xs">
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="font-semibold text-[#786b59]">Current Status:</span>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+                      (eventHistoryModal.session?.status || 'NOT_STARTED') === 'LOGGED_IN'
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        : (eventHistoryModal.session?.status || 'NOT_STARTED') === 'ON_BREAK'
+                        ? 'bg-[#fbf7f0] text-[#786b59] border-[#ebe1d3]'
+                        : (eventHistoryModal.session?.status || 'NOT_STARTED') === 'ON_LUNCH'
+                        ? 'bg-[#f0f9f4] text-emerald-800 border-[#d1ebd9]'
+                        : (eventHistoryModal.session?.status || 'NOT_STARTED') === 'LOGGED_OUT'
+                        ? 'bg-[#f4efe6] text-slate-800 border-[#ded5c6]'
+                        : 'bg-rose-50 text-rose-800 border-rose-200'
+                    }`}
+                  >
+                    {(eventHistoryModal.session?.status || 'NOT_STARTED').replace('_', ' ')}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="font-semibold text-[#786b59]">Login Time:</span>
+                  <span className="font-mono font-bold text-slate-900">
+                    {eventHistoryModal.session?.loginAt
+                      ? new Date(eventHistoryModal.session.loginAt).toLocaleTimeString('en-IN', {
+                          timeZone: 'Asia/Kolkata',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                        })
+                      : '--:--:--'}
+                    {eventHistoryModal.session?.isLate && (
+                      <span className="text-amber-700 ml-1 font-sans text-[11px]">
+                        (Late by {eventHistoryModal.session.lateMinutes}m)
+                      </span>
+                    )}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center text-slate-700">
+                  <span className="font-semibold text-[#786b59]">Logout Time:</span>
+                  <span className="font-mono font-bold text-slate-900">
+                    {eventHistoryModal.session?.logoutAt
+                      ? new Date(eventHistoryModal.session.logoutAt).toLocaleTimeString('en-IN', {
+                          timeZone: 'Asia/Kolkata',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                        })
+                      : '--:--:-- (In Progress)'}
+                  </span>
+                </div>
               </div>
 
-              <div className="p-3 rounded-2xl bg-orange-50/70 border border-orange-100 text-center min-w-0">
-                <span className="text-[10px] text-orange-700 font-semibold block uppercase tracking-wider">
-                  Lunch Time
-                </span>
-                <span className="text-lg font-extrabold text-orange-900 block font-mono">
-                  {eventHistoryModal.session?.totalLunchMinutes || 0}m
-                </span>
-                <span className="text-[10px] text-orange-600">Lunch Hour</span>
-              </div>
-            </div>
+              {/* Sequential Shift Events Timeline */}
+              <div className="space-y-2.5">
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center justify-between">
+                  <span>Shift Event Timeline ({eventHistoryModal.todayEvents.length})</span>
+                  <span className="text-[10px] text-[#8a7b68] normal-case font-normal">
+                    Ordered chronologically
+                  </span>
+                </h4>
 
-            {/* Shift Status & Timing Overview */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
-              <div className="flex justify-between items-center text-slate-700">
-                <span className="font-semibold text-slate-500">Current Status:</span>
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                    (eventHistoryModal.session?.status || 'NOT_STARTED') === 'LOGGED_IN'
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : (eventHistoryModal.session?.status || 'NOT_STARTED') === 'ON_BREAK'
-                      ? 'bg-amber-100 text-amber-800'
-                      : (eventHistoryModal.session?.status || 'NOT_STARTED') === 'ON_LUNCH'
-                      ? 'bg-orange-100 text-orange-800'
-                      : (eventHistoryModal.session?.status || 'NOT_STARTED') === 'LOGGED_OUT'
-                      ? 'bg-slate-200 text-slate-800'
-                      : 'bg-rose-100 text-rose-800'
-                  }`}
-                >
-                  {(eventHistoryModal.session?.status || 'NOT_STARTED').replace('_', ' ')}
-                </span>
-              </div>
+                <div className="space-y-2">
+                  {eventHistoryModal.todayEvents.length === 0 ? (
+                    <div className="p-4 rounded-xl bg-[#fbf8f2] text-center text-xs text-[#8a7b68] border border-[#ebe1d3]">
+                      No attendance events recorded today yet.
+                    </div>
+                  ) : (
+                    eventHistoryModal.todayEvents.map((ev, idx) => {
+                      const eventConfig: Record<string, { label: string; color: string }> = {
+                        LOGIN: { label: 'Day Check-In / Shift Start', color: 'bg-emerald-600 text-white' },
+                        BREAK_START: { label: 'Started Short Break', color: 'bg-blue-600 text-white' },
+                        BREAK_END: { label: 'Ended Short Break', color: 'bg-emerald-600 text-white' },
+                        LUNCH_START: { label: 'Started Lunch Break', color: 'bg-blue-600 text-white' },
+                        LUNCH_END: { label: 'Ended Lunch Break', color: 'bg-emerald-600 text-white' },
+                        LOGOUT: { label: 'Shift Completed / Logged Out', color: 'bg-slate-700 text-white' },
+                        AUTO_CLOSE_MIDNIGHT: {
+                          label: 'Auto-Closed at Midnight',
+                          color: 'bg-slate-600 text-white',
+                        },
+                      };
 
-              <div className="flex justify-between items-center text-slate-700">
-                <span className="font-semibold text-slate-500">Login Time:</span>
-                <span className="font-mono font-bold text-slate-900">
-                  {eventHistoryModal.session?.loginAt
-                    ? new Date(eventHistoryModal.session.loginAt).toLocaleTimeString('en-IN', {
-                        timeZone: 'Asia/Kolkata',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                      })
-                    : '--:--:--'}
-                  {eventHistoryModal.session?.isLate && (
-                    <span className="text-amber-600 ml-1 font-sans text-[11px]">
-                      (Late by {eventHistoryModal.session.lateMinutes}m)
-                    </span>
-                  )}
-                </span>
-              </div>
+                      const cfg = eventConfig[ev.eventType] || {
+                        label: ev.eventType,
+                        color: 'bg-blue-600 text-white',
+                      };
 
-              <div className="flex justify-between items-center text-slate-700">
-                <span className="font-semibold text-slate-500">Logout Time:</span>
-                <span className="font-mono font-bold text-slate-900">
-                  {eventHistoryModal.session?.logoutAt
-                    ? new Date(eventHistoryModal.session.logoutAt).toLocaleTimeString('en-IN', {
-                        timeZone: 'Asia/Kolkata',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                      })
-                    : '--:--:-- (In Progress)'}
-                </span>
-              </div>
-            </div>
-
-            {/* Sequential Shift Events Timeline */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center justify-between">
-                <span>Shift Event Timeline ({eventHistoryModal.todayEvents.length})</span>
-                <span className="text-[10px] text-slate-400 normal-case font-normal">
-                  Ordered chronologically
-                </span>
-              </h4>
-
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                {eventHistoryModal.todayEvents.length === 0 ? (
-                  <div className="p-4 rounded-xl bg-slate-50 text-center text-xs text-slate-400 border border-slate-100">
-                    No attendance events recorded today yet.
-                  </div>
-                ) : (
-                  eventHistoryModal.todayEvents.map((ev, idx) => {
-                    const eventConfig: Record<string, { label: string; color: string }> = {
-                      LOGIN: { label: 'Day Check-In / Shift Start', color: 'bg-emerald-500 text-white' },
-                      BREAK_START: { label: 'Started Short Break', color: 'bg-amber-500 text-white' },
-                      BREAK_END: { label: 'Ended Short Break', color: 'bg-emerald-600 text-white' },
-                      LUNCH_START: { label: 'Started Lunch Break', color: 'bg-orange-500 text-white' },
-                      LUNCH_END: { label: 'Ended Lunch Break', color: 'bg-emerald-600 text-white' },
-                      LOGOUT: { label: 'Shift Completed / Logged Out', color: 'bg-slate-700 text-white' },
-                      AUTO_CLOSE_MIDNIGHT: {
-                        label: 'Auto-Closed at Midnight',
-                        color: 'bg-purple-600 text-white',
-                      },
-                    };
-
-                    const cfg = eventConfig[ev.eventType] || {
-                      label: ev.eventType,
-                      color: 'bg-blue-600 text-white',
-                    };
-
-                    return (
-                      <div
-                        key={ev.id || idx}
-                        className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs gap-2"
-                      >
-                        <div className="flex items-center space-x-2.5 min-w-0 flex-1">
-                          <div
-                            className={`w-6 h-6 rounded-lg ${cfg.color} flex items-center justify-center font-bold text-[10px] shrink-0`}
-                          >
-                            {idx + 1}
+                      return (
+                        <div
+                          key={ev.id || idx}
+                          className="p-3 rounded-2xl bg-white border border-[#ebe1d3] hover:border-blue-300 transition-colors flex items-center justify-between text-xs gap-2 shadow-2xs"
+                        >
+                          <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                            <div
+                              className={`w-6 h-6 rounded-lg ${cfg.color} flex items-center justify-center font-bold text-[10px] shrink-0 shadow-2xs`}
+                            >
+                              {idx + 1}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <span className="font-bold text-slate-900 block truncate">
+                                {cfg.label}
+                              </span>
+                              <span className="text-[10px] text-[#786b59] truncate block">
+                                {ev.notes || 'Biometric / Geofence verified'}
+                              </span>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <span className="font-bold text-slate-900 block truncate">
-                              {cfg.label}
-                            </span>
-                            <span className="text-[10px] text-slate-500 truncate block">
-                              {ev.notes || 'Biometric / Geofence verified'}
-                            </span>
-                          </div>
+
+                          <span className="font-mono text-blue-600 font-bold text-xs shrink-0">
+                            {new Date(ev.eventTime).toLocaleTimeString('en-IN', {
+                              timeZone: 'Asia/Kolkata',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit',
+                            })}
+                          </span>
                         </div>
-
-                        <span className="font-mono text-blue-600 font-bold text-xs shrink-0">
-                          {new Date(ev.eventTime).toLocaleTimeString('en-IN', {
-                            timeZone: 'Asia/Kolkata',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          })}
-                        </span>
-                      </div>
-                    );
-                  })
-                )}
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </div>
 
-            <button
-              onClick={() => setEventHistoryModal(null)}
-              className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition-colors"
-            >
-              Close Details
-            </button>
+            {/* Modal Footer (Fixed at bottom) */}
+            <div className="pt-3 border-t border-[#ebe1d3] shrink-0">
+              <button
+                onClick={() => setEventHistoryModal(null)}
+                className="w-full py-2.5 rounded-xl bg-[#f4efe6] hover:bg-blue-600 hover:text-white text-slate-800 font-semibold text-xs border border-[#ded5c6] transition-all shadow-xs"
+              >
+                Close Details
+              </button>
+            </div>
           </div>
         </div>
       )}

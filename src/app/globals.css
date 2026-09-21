@@ -56,14 +56,19 @@ body {
   outline: none;
 }
 
-/* Custom Scrollbars */
+/* Sleek Modern Scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d6ccbe transparent;
+}
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f4efe6;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -72,5 +77,28 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #b8aba7;
+  background: #2563eb;
+}
+
+/* Custom Scrollbar for inner modal lists */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #ded6ca transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #ded6ca;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
 }
