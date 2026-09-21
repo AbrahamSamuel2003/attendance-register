@@ -73,6 +73,11 @@ export async function DELETE(
     db.events = db.events.filter((ev) => ev.employeeId !== id);
     db.persist();
 
+    // Delete from Supabase Cloud
+    import('@/lib/supabase').then(({ deleteEmployeeFromSupabase }) => {
+      deleteEmployeeFromSupabase(id);
+    }).catch(() => {});
+
     return NextResponse.json({
       success: true,
       message: `Employee ${removed.name} deleted permanently.`,

@@ -110,6 +110,19 @@ export class DatabaseStore {
   private constructor() {
     this.seedTodaySessions();
     this.loadFromDisk();
+    this.syncWithSupabase();
+  }
+
+  public async syncWithSupabase() {
+    try {
+      const { getOfficeSettingsFromSupabase, getEmployeesFromSupabase } = await import('./supabase');
+      const office = await getOfficeSettingsFromSupabase();
+      if (office) this.office = office;
+      const emps = await getEmployeesFromSupabase();
+      if (emps && emps.length > 0) this.employees = emps;
+    } catch (err) {
+      console.warn('Supabase sync warning:', err);
+    }
   }
 
   public persist() {
@@ -131,6 +144,12 @@ export class DatabaseStore {
           events: this.events,
         };
         fs.writeFileSync(dataFile, JSON.stringify(state, null, 2), 'utf-8');
+
+        // Cloud sync with Supabase
+        import('./supabase').then(({ saveOfficeSettingsToSupabase, saveEmployeeToSupabase }) => {
+          saveOfficeSettingsToSupabase(this.office);
+          this.employees.forEach((emp) => saveEmployeeToSupabase(emp));
+        }).catch(() => {});
       }
     } catch (e) {
       console.warn('DB persistence warning:', e);
