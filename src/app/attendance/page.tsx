@@ -259,21 +259,39 @@ export default function AttendanceMobilePage() {
     }
   };
 
-  // 3. Barcode Scanner Controls (Camera / html5-qrcode)
   const startCameraScanner = async () => {
     setIsScannerOpen(true);
     setActionErrorMsg(null);
     setCameraError(null);
     try {
-      const { Html5Qrcode } = await import('html5-qrcode');
-      const scanner = new Html5Qrcode('qr-reader-container');
+      const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
+      
+      const formatsToSupport = [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.CODE_93,
+        Html5QrcodeSupportedFormats.CODABAR,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.DATA_MATRIX,
+      ];
+
+      const scanner = new Html5Qrcode('qr-reader-container', {
+        formatsToSupport,
+        verbose: false,
+      });
       html5QrCodeRef.current = scanner;
 
       await scanner.start(
         { facingMode: 'environment' },
         {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
+          fps: 15,
+          qrbox: { width: 280, height: 160 }, // Rectangular scanning guide for 1D barcodes and QR codes
+          aspectRatio: 1.777778,
         },
         (decodedText: string) => {
           stopCameraScanner();

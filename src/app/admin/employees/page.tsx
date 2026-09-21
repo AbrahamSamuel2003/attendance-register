@@ -14,6 +14,7 @@ import {
   Search,
 } from 'lucide-react';
 import { Employee, Department } from '@/types';
+import { generateCode128SVG, getBadgeQRCodeUrl } from '@/lib/barcode';
 
 export default function AdminEmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -71,20 +72,39 @@ export default function AdminEmployeesPage() {
     fetchEmployees();
   }, [fetchEmployees]);
 
-  // Start Camera for Admin ID Badge Scanner
+  // Start Camera for Admin ID Badge Scanner (Supports 1D Barcodes + QR codes)
   const startAdminBarcodeScanner = async () => {
     setIsScannerActive(true);
     setScannerError(null);
     try {
-      const { Html5Qrcode } = await import('html5-qrcode');
-      const scanner = new Html5Qrcode('admin-qr-reader');
+      const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode');
+      
+      const formatsToSupport = [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.CODE_93,
+        Html5QrcodeSupportedFormats.CODABAR,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.ITF,
+        Html5QrcodeSupportedFormats.DATA_MATRIX,
+      ];
+
+      const scanner = new Html5Qrcode('admin-qr-reader', {
+        formatsToSupport,
+        verbose: false,
+      });
       html5QrCodeRef.current = scanner;
 
       await scanner.start(
         { facingMode: 'environment' },
         {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
+          fps: 15,
+          qrbox: { width: 280, height: 160 }, // Rectangular guide for optimal 1D barcode & QR alignment
+          aspectRatio: 1.777778,
         },
         (decodedText: string) => {
           stopAdminBarcodeScanner();
@@ -95,7 +115,7 @@ export default function AdminEmployeesPage() {
     } catch (err: any) {
       console.warn('Admin scanner error:', err);
       setScannerError(
-        'Camera is unavailable. You can enter or scan using a USB barcode scanner in the box below.'
+        'Camera is unavailable or permission denied. You can also enter the barcode manually in the field below.'
       );
     }
   };
@@ -511,25 +531,36 @@ export default function AdminEmployeesPage() {
                 </span>
               </div>
 
-              {/* Barcode Pattern */}
-              <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl space-y-1">
-                <div className="h-10 flex justify-center items-center space-x-0.5">
-                  {[3, 1, 2, 4, 1, 3, 2, 1, 4, 2, 1, 3, 2, 4, 1, 2, 3, 1, 2, 4, 2, 1, 3].map(
-                    (w, idx) => (
-                      <div
-                        key={idx}
-                        className="bg-slate-900 h-full"
-                        style={{ width: `${w * 1.5}px` }}
-                      />
-                    )
-                  )}
+              {/* Scannable Barcode & QR Code Section */}
+              <div className="bg-white border border-slate-200 p-3 rounded-xl space-y-3">
+                {/* 1D Code 128 Barcode */}
+                <div className="space-y-1">
+                  <div
+                    className="h-12 flex justify-center items-center overflow-hidden"
+                    dangerouslySetInnerHTML={{
+                      __html: generateCode128SVG(idCardModalEmp.employee.barcodeValue, 48, 1.8),
+                    }}
+                  />
+                  <p className="text-[11px] font-mono font-bold tracking-widest text-slate-900">
+                    {idCardModalEmp.employee.barcodeValue}
+                  </p>
                 </div>
-                <p className="text-[11px] font-mono font-bold tracking-widest text-slate-900">
-                  {idCardModalEmp.employee.barcodeValue}
-                </p>
+
+                {/* 2D QR Code as Instant Alternative */}
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-center space-x-3">
+                  <img
+                    src={getBadgeQRCodeUrl(idCardModalEmp.employee.barcodeValue)}
+                    alt="Badge QR Code"
+                    className="w-20 h-20 rounded-lg border border-slate-200 p-1 bg-white"
+                  />
+                  <div className="text-left text-[10px] text-slate-500">
+                    <p className="font-semibold text-slate-700">Dual-Format Badge</p>
+                    <p>Scannable via 1D Barcode laser or 2D camera QR scan.</p>
+                  </div>
+                </div>
               </div>
 
-              <div className="text-[9px] text-slate-500 pt-1">
+              <div className="text-[9px] text-slate-400 pt-0.5">
                 Official Workplace ID Card • Scan to mark attendance
               </div>
             </div>
