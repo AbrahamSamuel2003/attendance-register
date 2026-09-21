@@ -186,15 +186,15 @@ export default function AdminSettingsPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Office Location & Geofence Card */}
-        <div className="rounded-2xl p-6 bg-white border border-slate-200 shadow-xs space-y-4">
+        <div className="rounded-2xl p-4 sm:p-6 bg-white border border-slate-200 shadow-xs space-y-4 min-w-0">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+            <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 shrink-0">
               <MapPin className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Office Location & GPS Geofence</h3>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-slate-900 truncate">Office Location & GPS Geofence</h3>
               <p className="text-xs text-slate-500">
                 Set company physical coordinates for employee attendance verification.
               </p>
@@ -202,14 +202,12 @@ export default function AdminSettingsPage() {
           </div>
 
           {/* One-Tap Capture Current Location Button */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-xs font-bold text-slate-900">One-Tap Office Location Lock</h4>
-                <p className="text-[11px] text-slate-500">
-                  Stand in the office and click below to store current GPS coordinates automatically.
-                </p>
-              </div>
+          <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5 min-w-0">
+            <div>
+              <h4 className="text-xs font-bold text-slate-900">One-Tap Office Location Lock</h4>
+              <p className="text-[11px] text-slate-500">
+                Stand in the office and click below to store current GPS coordinates automatically.
+              </p>
             </div>
 
             <button
@@ -220,20 +218,20 @@ export default function AdminSettingsPage() {
             >
               {gpsLoading ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Locking High-Accuracy GPS Satellite Fix...</span>
+                  <RefreshCw className="w-4 h-4 animate-spin shrink-0" />
+                  <span className="truncate">Locking High-Accuracy GPS Satellite Fix...</span>
                 </>
               ) : (
                 <>
-                  <Navigation className="w-4 h-4" />
-                  <span>Use My Current Location as Office Location</span>
+                  <Navigation className="w-4 h-4 shrink-0" />
+                  <span className="truncate">Use My Current Location as Office Location</span>
                 </>
               )}
             </button>
 
             {gpsError && (
-              <div className="p-2 rounded-lg bg-red-50 text-red-700 text-[11px] border border-red-200 flex items-center space-x-1.5">
-                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              <div className="p-2 rounded-lg bg-red-50 text-red-700 text-[11px] border border-red-200 flex items-start space-x-1.5">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                 <span>{gpsError}</span>
               </div>
             )}
@@ -269,7 +267,7 @@ export default function AdminSettingsPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-slate-700 font-semibold mb-1">Latitude</label>
                 <input
@@ -327,13 +325,13 @@ export default function AdminSettingsPage() {
         </div>
 
         {/* Change Admin Password Card */}
-        <div className="rounded-2xl p-6 bg-white border border-slate-200 shadow-xs space-y-4">
+        <div className="rounded-2xl p-4 sm:p-6 bg-white border border-slate-200 shadow-xs space-y-4 min-w-0">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+            <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 shrink-0">
               <KeyRound className="w-5 h-5" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Change Admin Password</h3>
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-slate-900 truncate">Change Admin Password</h3>
               <p className="text-xs text-slate-500">
                 Enter your current password to set a new administrator password.
               </p>

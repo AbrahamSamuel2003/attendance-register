@@ -276,8 +276,8 @@ export default function AdminEmployeesPage() {
     <div className="space-y-6">
       {/* Header & Add Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-bold text-slate-900">Employee Directory & Security</h1>
+        <div className="min-w-0">
+          <h1 className="text-lg font-bold text-slate-900 truncate">Employee Directory & Security</h1>
           <p className="text-xs text-slate-500">
             Register employees by scanning physical ID barcodes, assign PINs, and manage device locks.
           </p>
@@ -289,7 +289,7 @@ export default function AdminEmployeesPage() {
             setAddEmpErrorMsg(null);
             setAddEmpSuccessMsg(null);
           }}
-          className="self-start sm:self-auto py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center space-x-1.5 shadow-xs transition-colors"
+          className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center justify-center space-x-1.5 shadow-xs transition-colors shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Register New Employee</span>
@@ -297,7 +297,7 @@ export default function AdminEmployeesPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="relative max-w-sm">
+      <div className="relative w-full sm:max-w-md">
         <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
         <input
           type="text"
@@ -309,21 +309,21 @@ export default function AdminEmployeesPage() {
       </div>
 
       {/* Employee Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
         {filteredEmployees.map((emp) => (
           <div
             key={emp.id}
-            className="rounded-2xl p-5 bg-white border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between"
+            className="rounded-2xl p-4 sm:p-5 bg-white border border-slate-200 shadow-xs space-y-3.5 flex flex-col justify-between min-w-0"
           >
-            <div className="flex items-start justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-11 h-11 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-sm">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center space-x-3 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-sm shrink-0">
                   {emp.name.charAt(0)}
                 </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-sm">{emp.name}</h3>
-                  <p className="text-xs text-slate-500">{emp.designation}</p>
-                  <span className="text-[10px] font-mono text-blue-600 font-semibold">
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-bold text-slate-900 text-sm truncate">{emp.name}</h3>
+                  <p className="text-xs text-slate-500 truncate">{emp.designation}</p>
+                  <span className="text-[10px] font-mono text-blue-600 font-semibold block truncate">
                     {emp.employeeCode} • {departmentsMap.get(emp.departmentId) || 'General'}
                   </span>
                 </div>
@@ -332,7 +332,7 @@ export default function AdminEmployeesPage() {
               {/* Delete Employee Icon Button */}
               <button
                 onClick={() => handleDeleteEmployee(emp.id, emp.name)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0"
                 title={`Delete ${emp.name}`}
               >
                 <Trash2 className="w-4 h-4" />
@@ -340,23 +340,25 @@ export default function AdminEmployeesPage() {
             </div>
 
             {/* Security Tokens */}
-            <div className="p-3 rounded-xl bg-slate-50 space-y-2 text-xs border border-slate-100">
-              <div className="flex justify-between text-slate-600">
-                <span>Canva Barcode/QR:</span>
-                <span className="font-mono text-slate-900 font-semibold">{emp.barcodeValue}</span>
+            <div className="p-3 rounded-xl bg-slate-50 space-y-1.5 text-xs border border-slate-100 min-w-0">
+              <div className="flex justify-between items-center text-slate-600 gap-2">
+                <span className="shrink-0 text-[11px]">Barcode/QR:</span>
+                <span className="font-mono text-slate-900 font-semibold truncate text-right text-[11px] max-w-[150px]">
+                  {emp.barcodeValue}
+                </span>
               </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Security PIN:</span>
-                <span className="font-mono text-emerald-700 font-bold">•••• (PIN: {emp.pin})</span>
+              <div className="flex justify-between items-center text-slate-600">
+                <span className="shrink-0 text-[11px]">Security PIN:</span>
+                <span className="font-mono text-emerald-700 font-bold text-[11px]">•••• (PIN: {emp.pin})</span>
               </div>
-              <div className="flex justify-between text-slate-600">
-                <span>Device Binding:</span>
+              <div className="flex justify-between items-center text-slate-600">
+                <span className="shrink-0 text-[11px]">Device Lock:</span>
                 <span
-                  className={`font-semibold ${
+                  className={`font-semibold text-[11px] ${
                     emp.deviceToken ? 'text-emerald-700' : 'text-amber-700'
                   }`}
                 >
-                  {emp.deviceToken ? '1 Device Bound' : 'No Device Bound'}
+                  {emp.deviceToken ? '1 Device Bound' : 'Pending Scan'}
                 </span>
               </div>
             </div>
@@ -372,16 +374,16 @@ export default function AdminEmployeesPage() {
                 }
                 className="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold flex items-center justify-center space-x-1 transition-colors"
               >
-                <QrCode className="w-3.5 h-3.5 text-blue-600" />
-                <span>Print Badge</span>
+                <QrCode className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span className="truncate">Print Badge</span>
               </button>
 
               <button
                 onClick={() => handleResetDeviceBinding(emp.id, emp.name)}
                 className="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 flex items-center justify-center space-x-1 transition-colors"
               >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>Reset Device</span>
+                <Smartphone className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">Reset Device</span>
               </button>
             </div>
           </div>

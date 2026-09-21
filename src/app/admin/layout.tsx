@@ -17,6 +17,9 @@ import {
   Eye,
   EyeOff,
   LogOut,
+  Menu,
+  X,
+  Home,
 } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -27,9 +30,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [authError, setAuthError] = useState('');
   const [isVerifyingAuth, setIsVerifyingAuth] = useState(false);
   const [currentTimeStr, setCurrentTimeStr] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
-    // Check both localStorage and sessionStorage for mobile persistence
     const isAuth =
       typeof window !== 'undefined' &&
       (localStorage.getItem('ss40_admin_authenticated') === 'true' ||
@@ -66,7 +74,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setAuthError('');
 
     try {
-      // 1. Try server verification
       const res = await fetch('/api/admin/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,7 +91,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         return;
       }
 
-      // Fallback local check if network/JSON error occurs on mobile
       if (cleanPassword === '654321') {
         try {
           localStorage.setItem('ss40_admin_authenticated', 'true');
@@ -96,7 +102,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       throw new Error(data.error || 'Incorrect admin password. Default is 654321');
     } catch (err: any) {
-      // If server unreachable or error, allow default password if matching
       if (cleanPassword === '654321') {
         try {
           localStorage.setItem('ss40_admin_authenticated', 'true');
@@ -118,6 +123,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     } catch (_) {}
     setIsAuthenticated(false);
     setAuthPasswordInput('');
+    setMobileMenuOpen(false);
   };
 
   const togglePasswordVisibility = (e: React.MouseEvent | React.TouchEvent) => {
@@ -202,7 +208,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const navItems = [
-    { name: 'Live Roster', href: '/admin/dashboard', icon: Activity },
+    { name: 'Live Roster', href: '/admin/dashboard', icon: Activity, badge: 'Live' },
     { name: 'Employees', href: '/admin/employees', icon: Users },
     { name: 'Reports', href: '/admin/reports', icon: FileSpreadsheet },
     { name: 'Settings & Security', href: '/admin/settings', icon: Settings },
@@ -210,19 +216,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
-      {/* Top Admin Header */}
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white px-4 sm:px-8 py-3.5 flex items-center justify-between shadow-xs">
-        <div className="flex items-center space-x-4">
+      {/* Top Admin Header Bar */}
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-md px-3 sm:px-8 py-3 flex items-center justify-between shadow-xs">
+        <div className="flex items-center space-x-2.5 sm:space-x-4 min-w-0">
           <Link
             href="/"
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition-colors shrink-0"
             title="Return to Home"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
 
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-slate-200 flex items-center justify-center">
+          <div className="flex items-center space-x-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-slate-200 flex items-center justify-center shrink-0">
               <Image
                 src="/logo.avif"
                 alt="Logo"
@@ -231,46 +237,59 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 className="object-contain w-full h-full p-0.5"
               />
             </div>
-            <div>
-              <span className="font-bold text-slate-900 text-base tracking-tight block">
+            <div className="min-w-0">
+              <span className="font-bold text-slate-900 text-sm sm:text-base tracking-tight block truncate">
                 SS40 NETWORK
               </span>
-              <p className="text-[11px] text-slate-500 font-normal">
-                Attendance & Operations Command Center
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-normal truncate hidden xs:block">
+                Operations Command Center
               </p>
             </div>
           </div>
         </div>
 
-        {/* Right Header Actions */}
-        <div className="flex items-center space-x-3">
-          <div className="hidden sm:flex items-center space-x-1.5 text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
-            <Clock className="w-3.5 h-3.5 text-slate-400" />
-            <span>IST: {currentTimeStr || '00:00:00'}</span>
+        {/* Right Header Actions & Mobile Menu Button */}
+        <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+          {/* Live IST Clock */}
+          <div className="flex items-center space-x-1.5 text-[11px] sm:text-xs text-slate-600 bg-slate-100 px-2.5 py-1.5 rounded-xl border border-slate-200 font-mono">
+            <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+            <span className="hidden sm:inline text-slate-400">IST:</span>
+            <span>{currentTimeStr || '00:00:00'}</span>
           </div>
 
+          {/* Desktop Export Button */}
           <a
             href="/api/reports/export-excel"
-            className="py-2 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center space-x-2 shadow-xs transition-colors"
+            className="hidden md:flex py-1.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs items-center space-x-1.5 shadow-xs transition-colors"
           >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span className="hidden sm:inline">Export Excel</span>
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>Export Excel</span>
           </a>
 
+          {/* Desktop Logout Button */}
           <button
             onClick={handleAdminLogout}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600 text-xs font-semibold flex items-center space-x-1 border border-slate-200 transition-colors"
+            className="hidden md:flex p-1.5 px-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600 text-xs font-semibold items-center space-x-1 border border-slate-200 transition-colors"
             title="Logout Admin"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Logout</span>
+            <span>Logout</span>
+          </button>
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 active:bg-blue-50 active:text-blue-600 border border-slate-200 transition-colors touch-manipulation"
+            aria-label="Toggle Navigation Menu"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5 text-slate-900" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
       </header>
 
-      {/* Admin Navigation Bar */}
-      <div className="border-b border-slate-200 bg-white px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto flex items-center space-x-1 sm:space-x-2 overflow-x-auto py-2">
+      {/* Desktop Horizontal Navigation Bar */}
+      <div className="hidden md:block border-b border-slate-200 bg-white px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto flex items-center space-x-2 py-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -285,16 +304,96 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-4 h-4 shrink-0" />
                 <span>{item.name}</span>
+                {item.badge && (
+                  <span
+                    className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold uppercase ${
+                      isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'
+                    }`}
+                  >
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
         </div>
       </div>
 
+      {/* Mobile Slide-down Menu Drawer Overlay */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 top-[57px] z-50 md:hidden bg-slate-900/40 backdrop-blur-xs flex flex-col justify-start animate-fadeIn">
+          <div className="bg-white border-b border-slate-200 shadow-xl p-4 space-y-3 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                Navigation Menu
+              </span>
+              <span className="text-[11px] font-mono text-slate-500">IST {currentTimeStr}</span>
+            </div>
+
+            <nav className="grid grid-cols-1 gap-1.5">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  pathname === item.href ||
+                  (item.href === '/admin/dashboard' && pathname === '/admin');
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`py-3 px-3.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between ${
+                      isActive
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-slate-50 hover:bg-slate-100 text-slate-700 active:bg-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-blue-600'}`} />
+                      <span>{item.name}</span>
+                    </div>
+                    {item.badge && (
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                          isActive ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-700'
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Quick Mobile Actions */}
+            <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
+              <a
+                href="/api/reports/export-excel"
+                className="py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                <span>Export Excel</span>
+              </a>
+
+              <button
+                onClick={handleAdminLogout}
+                className="py-2.5 px-3 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors"
+              >
+                <LogOut className="w-4 h-4 text-rose-600" />
+                <span>Logout Admin</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Sub-Page Content */}
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-8 py-6 flex-1">{children}</main>
+      <main className="max-w-7xl mx-auto w-full px-3.5 sm:px-8 py-5 sm:py-6 flex-1 min-w-0">
+        {children}
+      </main>
     </div>
   );
 }
+
