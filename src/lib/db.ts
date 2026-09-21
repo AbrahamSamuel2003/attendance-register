@@ -109,6 +109,54 @@ export class DatabaseStore {
 
   private constructor() {
     this.seedTodaySessions();
+    this.loadFromDisk();
+  }
+
+  public persist() {
+    try {
+      if (typeof window === 'undefined') {
+        const fs = require('fs');
+        const path = require('path');
+        const dataDir = path.join(process.cwd(), 'data');
+        if (!fs.existsSync(dataDir)) {
+          fs.mkdirSync(dataDir, { recursive: true });
+        }
+        const dataFile = path.join(dataDir, 'db_store.json');
+        const state = {
+          adminPassword: this.adminPassword,
+          office: this.office,
+          departments: this.departments,
+          employees: this.employees,
+          sessions: this.sessions,
+          events: this.events,
+        };
+        fs.writeFileSync(dataFile, JSON.stringify(state, null, 2), 'utf-8');
+      }
+    } catch (e) {
+      console.warn('DB persistence warning:', e);
+    }
+  }
+
+  private loadFromDisk() {
+    try {
+      if (typeof window === 'undefined') {
+        const fs = require('fs');
+        const path = require('path');
+        const dataFile = path.join(process.cwd(), 'data', 'db_store.json');
+        if (fs.existsSync(dataFile)) {
+          const raw = fs.readFileSync(dataFile, 'utf-8');
+          const state = JSON.parse(raw);
+          if (state.adminPassword) this.adminPassword = state.adminPassword;
+          if (state.office) this.office = state.office;
+          if (state.departments?.length) this.departments = state.departments;
+          if (state.employees?.length) this.employees = state.employees;
+          if (state.sessions) this.sessions = state.sessions;
+          if (state.events) this.events = state.events;
+        }
+      }
+    } catch (e) {
+      console.warn('DB load from disk warning:', e);
+    }
   }
 
   public static getInstance(): DatabaseStore {

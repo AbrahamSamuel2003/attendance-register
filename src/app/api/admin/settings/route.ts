@@ -20,6 +20,8 @@ export async function POST(req: Request) {
     if (typeof longitude === 'number') db.office.longitude = longitude;
     if (typeof radiusMeters === 'number') db.office.radiusMeters = radiusMeters;
 
+    db.persist();
+
     return NextResponse.json({
       success: true,
       message: 'Office settings and Geofence updated successfully!',

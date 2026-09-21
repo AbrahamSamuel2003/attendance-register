@@ -70,6 +70,7 @@ export async function POST(req: Request) {
     };
 
     db.employees.push(newEmp);
+    db.persist();
 
     return NextResponse.json({
       success: true,
