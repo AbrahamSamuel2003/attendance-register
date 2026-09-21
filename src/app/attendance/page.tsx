@@ -266,24 +266,6 @@ export default function AttendanceMobilePage() {
     }
   };
 
-  // Audio Beep generator for scanner confirmation
-  const playBeep = () => {
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (AudioCtx) {
-        const ctx = new AudioCtx();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.frequency.setValueAtTime(800, ctx.currentTime);
-        gain.gain.setValueAtTime(0.2, ctx.currentTime);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.15);
-      }
-    } catch (_) {}
-  };
-
   const startCameraScanner = async () => {
     setIsScannerOpen(true);
     setActionErrorMsg(null);
@@ -319,9 +301,8 @@ export default function AttendanceMobilePage() {
           aspectRatio: 1.777778,
         },
         (decodedText: string) => {
-          playBeep();
           stopCameraScanner();
-          handleBarcodeIdentified(decodedText.trim().toUpperCase());
+          handleBarcodeIdentified(decodedText);
         },
         () => {}
       );
@@ -688,41 +669,15 @@ export default function AttendanceMobilePage() {
         {/* 3. Barcode Scanner or Active Session Panel */}
         {!employeeData ? (
           /* State: Not yet scanned */
-          <div className="rounded-2xl p-6 bg-white border border-slate-200 space-y-4 shadow-xs">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-                  <QrCode className="w-4 h-4" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-bold text-slate-900">Physical ID Card Barcode / QR</h2>
-                  <p className="text-[11px] text-slate-500">Scan badge or enter card code</p>
-                </div>
-              </div>
-
-              {locationStatus.isInside && (
-                <div className="flex items-center space-x-1.5">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isScanningFile}
-                    className="py-1.5 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs border border-emerald-200 flex items-center space-x-1 transition-colors"
-                    title="Take high-res photo or upload image of badge"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>{isScanningFile ? 'Decoding...' : 'Snap Photo'}</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={isScannerOpen ? stopCameraScanner : startCameraScanner}
-                    className="py-1.5 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs border border-blue-200 flex items-center space-x-1 transition-colors"
-                  >
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span>{isScannerOpen ? 'Close Live' : 'Live Camera'}</span>
-                  </button>
-                </div>
-              )}
+          <div className="rounded-2xl p-6 bg-white border border-slate-200 text-center space-y-4 shadow-xs">
+            <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-100 mx-auto flex items-center justify-center text-blue-600">
+              <QrCode className="w-7 h-7" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Scan Employee ID Badge</h2>
+              <p className="text-xs text-slate-500 max-w-xs mx-auto mt-1">
+                Point your smartphone camera at the physical barcode or QR code on your card.
+              </p>
             </div>
 
             {/* Hidden Photo Input for Instant High-Res Barcode Detection */}
@@ -735,8 +690,27 @@ export default function AttendanceMobilePage() {
               className="hidden"
             />
 
-            {!locationStatus.isInside ? (
-              <div className="space-y-2 py-2">
+            {locationStatus.isInside ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  onClick={startCameraScanner}
+                  className="py-3.5 px-4 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white cursor-pointer"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Live Camera Scan</span>
+                </button>
+
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isScanningFile}
+                  className="py-3.5 px-4 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white cursor-pointer"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>{isScanningFile ? 'Decoding Photo...' : 'Snap / Upload Photo'}</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
                 <button
                   onClick={simulateOfficeGPS}
                   className="w-full py-3.5 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white cursor-pointer"
@@ -744,67 +718,14 @@ export default function AttendanceMobilePage() {
                   <Zap className="w-4 h-4 text-amber-300" />
                   <span>Verify Office & Open Scanner</span>
                 </button>
-                <p className="text-[10px] text-slate-400 text-center">
+                <p className="text-[10px] text-slate-400">
                   (Automatically matches office GPS coordinates)
                 </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {/* Inline Live Camera Viewfinder */}
-                {isScannerOpen && (
-                  <div className="space-y-2">
-                    <div
-                      id="qr-reader-container"
-                      ref={scannerRef}
-                      className="w-full h-56 rounded-xl overflow-hidden border-2 border-blue-500 bg-slate-900"
-                    />
-                    <p className="text-[11px] text-slate-500 text-center">
-                      Point camera at the employee's physical ID card barcode or QR code
-                    </p>
-                  </div>
-                )}
-
-                {cameraError && (
-                  <div className="p-2.5 rounded-xl bg-amber-50 text-amber-800 text-xs border border-amber-200">
-                    {cameraError}
-                  </div>
-                )}
-
-                {/* Direct Card Code Input (Type or USB Gun Scanner) */}
-                <div>
-                  <label className="block text-slate-700 text-xs font-semibold mb-1">
-                    Canva ID Card Code / Barcode / QR
-                  </label>
-                  <form
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      if (manualBarcodeInput.trim()) {
-                        handleBarcodeIdentified(manualBarcodeInput.trim().toUpperCase());
-                      }
-                    }}
-                    className="flex space-x-2"
-                  >
-                    <input
-                      type="text"
-                      value={manualBarcodeInput}
-                      onChange={(e) => setManualBarcodeInput(e.target.value.toUpperCase())}
-                      placeholder="e.g. SS40-EMP-2026001 (or scan card above)"
-                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-white text-slate-900 text-xs font-mono font-bold border border-slate-300 focus:border-blue-500"
-                    />
-                    <button
-                      type="submit"
-                      disabled={!manualBarcodeInput.trim() || isProcessingAction}
-                      className="py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:bg-slate-200 text-white font-semibold text-xs shadow-xs transition-colors"
-                    >
-                      {isProcessingAction ? 'Looking up...' : 'Identify'}
-                    </button>
-                  </form>
-                </div>
               </div>
             )}
 
             {/* Quick Demo Test Pickers */}
-            <div className="pt-3 border-t border-slate-100">
+            <div className="pt-4 border-t border-slate-100">
               <p className="text-[11px] font-semibold text-slate-500 mb-2">Or select test badge:</p>
               <div className="grid grid-cols-2 gap-2">
                 <button
