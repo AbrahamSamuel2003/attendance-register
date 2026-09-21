@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Employee, Department } from '@/types';
 import { generateCode128SVG, getBadgeQRCodeUrl } from '@/lib/barcode';
+import { decodeBarcodeFromFile } from '@/lib/scanner';
 
 export default function AdminEmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -36,6 +37,7 @@ export default function AdminEmployeesPage() {
 
   // Admin Live Barcode Scanner State
   const [isScannerActive, setIsScannerActive] = useState(false);
+  const [isScanningFile, setIsScanningFile] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
   const [addEmpSuccessMsg, setAddEmpSuccessMsg] = useState<string | null>(null);
   const [addEmpErrorMsg, setAddEmpErrorMsg] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export default function AdminEmployeesPage() {
     departmentName: string;
   } | null>(null);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<HTMLDivElement>(null);
   const html5QrCodeRef = useRef<any>(null);
 
@@ -151,6 +154,28 @@ export default function AdminEmployeesPage() {
       html5QrCodeRef.current = null;
     }
     setIsScannerActive(false);
+  };
+
+  const handleImageUploadScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setScannerError(null);
+    setIsScanningFile(true);
+
+    try {
+      const code = await decodeBarcodeFromFile(file);
+      if (code) {
+        playBeep();
+        const cleanCode = code.trim().toUpperCase();
+        setNewEmpData((prev) => ({ ...prev, barcodeValue: cleanCode }));
+      }
+    } catch (err: any) {
+      setScannerError(err.message || 'Could not decode barcode from photo. Please ensure good lighting and clear focus.');
+    } finally {
+      setIsScanningFile(false);
+      e.target.value = '';
+    }
   };
 
   const handleCreateEmployee = async (e: React.FormEvent) => {
@@ -414,20 +439,43 @@ export default function AdminEmployeesPage() {
 
               {/* Physical ID Card Barcode Scan Section */}
               <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center space-x-2">
                     <QrCode className="w-4 h-4 text-blue-600" />
-                    <span className="font-bold text-slate-800">Physical ID Card Barcode</span>
+                    <span className="font-bold text-slate-800 text-xs">Physical ID Card Barcode</span>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={isScannerActive ? stopAdminBarcodeScanner : startAdminBarcodeScanner}
-                    className="py-1.5 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs border border-blue-200 flex items-center space-x-1"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span>{isScannerActive ? 'Close Camera' : 'Scan Physical Card'}</span>
-                  </button>
+                  <div className="flex items-center space-x-1.5">
+                    {/* Hidden File / Camera Snap Input */}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageUploadScan}
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isScanningFile}
+                      className="py-1.5 px-2.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs border border-emerald-200 flex items-center space-x-1 transition-colors"
+                      title="Take high-res photo or upload image of badge"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>{isScanningFile ? 'Decoding Photo...' : 'Snap / Upload Photo'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={isScannerActive ? stopAdminBarcodeScanner : startAdminBarcodeScanner}
+                      className="py-1.5 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold text-xs border border-blue-200 flex items-center space-x-1 transition-colors"
+                    >
+                      <QrCode className="w-3.5 h-3.5" />
+                      <span>{isScannerActive ? 'Close Live' : 'Live Camera'}</span>
+                    </button>
+                  </div>
                 </div>
 
                 {isScannerActive && (

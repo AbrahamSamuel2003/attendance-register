@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { AttendanceEventType, AttendanceStatus } from '@/types';
+import { decodeBarcodeFromFile } from '@/lib/scanner';
 
 export default function AttendanceMobilePage() {
   // Device & Location State
@@ -101,8 +102,10 @@ export default function AttendanceMobilePage() {
   const [currentTimeStr, setCurrentTimeStr] = useState('');
 
   // Scanner container ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<HTMLDivElement>(null);
   const html5QrCodeRef = useRef<any>(null);
+  const [isScanningFile, setIsScanningFile] = useState(false);
 
   // 1. Initialize Device UUID & Clock
   useEffect(() => {
@@ -319,6 +322,26 @@ export default function AttendanceMobilePage() {
     }
     setIsScannerOpen(false);
     setCameraError(null);
+  };
+
+  const handleImageUploadScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setActionErrorMsg(null);
+    setIsScanningFile(true);
+
+    try {
+      const code = await decodeBarcodeFromFile(file);
+      if (code) {
+        handleBarcodeIdentified(code);
+      }
+    } catch (err: any) {
+      setActionErrorMsg(err.message || 'Could not decode barcode from photo. Please ensure good lighting and clear focus.');
+    } finally {
+      setIsScanningFile(false);
+      e.target.value = '';
+    }
   };
 
   // 4. Barcode Lookup & Identification
@@ -653,14 +676,35 @@ export default function AttendanceMobilePage() {
               </p>
             </div>
 
+            {/* Hidden Photo Input for Instant High-Res Barcode Detection */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUploadScan}
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+            />
+
             {locationStatus.isInside ? (
-              <button
-                onClick={startCameraScanner}
-                className="w-full py-3.5 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white cursor-pointer"
-              >
-                <Camera className="w-4 h-4" />
-                <span>Open ID Barcode Scanner</span>
-              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  onClick={startCameraScanner}
+                  className="py-3.5 px-4 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white cursor-pointer"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Live Camera Scan</span>
+                </button>
+
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isScanningFile}
+                  className="py-3.5 px-4 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white cursor-pointer"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>{isScanningFile ? 'Decoding Photo...' : 'Snap / Upload Photo'}</span>
+                </button>
+              </div>
             ) : (
               <div className="space-y-2">
                 <button
