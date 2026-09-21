@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
@@ -31,11 +31,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [isVerifyingAuth, setIsVerifyingAuth] = useState(false);
   const [currentTimeStr, setCurrentTimeStr] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const menuContainerRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   // Close mobile menu when route changes
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  // Close mobile menu when clicking outside or pressing Escape
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (
+        menuContainerRef.current &&
+        !menuContainerRef.current.contains(target) &&
+        menuButtonRef.current &&
+        !menuButtonRef.current.contains(target)
+      ) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick, { passive: true });
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     const isAuth =
@@ -278,6 +313,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Mobile Menu Toggle Button */}
           <button
+            ref={menuButtonRef}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 active:bg-blue-50 active:text-blue-600 border border-slate-200 transition-colors touch-manipulation"
             aria-label="Toggle Navigation Menu"
@@ -323,8 +359,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Mobile Slide-down Menu Drawer Overlay */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 top-[57px] z-50 md:hidden bg-slate-900/40 backdrop-blur-xs flex flex-col justify-start animate-fadeIn">
-          <div className="bg-white border-b border-slate-200 shadow-xl p-4 space-y-3 max-h-[85vh] overflow-y-auto">
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          className="fixed inset-0 top-[57px] z-50 md:hidden bg-slate-900/40 backdrop-blur-xs flex flex-col justify-start animate-fadeIn"
+        >
+          <div
+            ref={menuContainerRef}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white border-b border-slate-200 shadow-xl p-4 space-y-3 max-h-[85vh] overflow-y-auto"
+          >
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 Navigation Menu
