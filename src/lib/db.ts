@@ -1,4 +1,13 @@
 import { Department, Employee, Office, AttendanceSession, AttendanceEvent } from '@/types';
+import {
+  getOfficeSettingsFromSupabase,
+  saveOfficeSettingsToSupabase,
+  getEmployeesFromSupabase,
+  saveEmployeeToSupabase,
+  deleteEmployeeFromSupabase,
+  saveSessionToSupabase,
+  saveEventToSupabase,
+} from './supabase';
 
 // In-memory data store (persists across API requests in Node runtime)
 export class DatabaseStore {
@@ -10,10 +19,9 @@ export class DatabaseStore {
     id: 'off-ss40-hq',
     name: 'SS40 Network Main Office',
     address: 'SS40 Tech Park, 4th Floor, Innovation Wing',
-    // Default coordinates (User can update in Settings or click "Sync Current GPS")
-    latitude: 12.9716, // Bangalore / default coordinate
+    latitude: 12.9716, // Default coordinate
     longitude: 77.5946,
-    radiusMeters: 100, // 100 meters geofence radius
+    radiusMeters: 100, // Default 100 meters
     timezone: 'Asia/Kolkata',
     status: 'ACTIVE',
   };
@@ -36,8 +44,8 @@ export class DatabaseStore {
       departmentId: 'dept-eng',
       designation: 'Senior Full Stack Lead',
       barcodeValue: 'SS40-EMP-8F73K2',
-      pin: '1234', // default 4-digit PIN
-      deviceToken: null, // First device scan binds this
+      pin: '1234',
+      deviceToken: null,
       status: 'ACTIVE',
       joinedAt: '2024-01-15',
       createdAt: '2024-01-15T09:00:00.000Z',
@@ -57,51 +65,6 @@ export class DatabaseStore {
       joinedAt: '2024-03-01',
       createdAt: '2024-03-01T09:00:00.000Z',
     },
-    {
-      id: 'emp-003',
-      employeeCode: 'SS40-003',
-      name: 'Priya Sundaram',
-      email: 'priya.s@ss40.network',
-      phone: '+91 98765 43212',
-      departmentId: 'dept-ui',
-      designation: 'Product Designer',
-      barcodeValue: 'SS40-EMP-3K99L1',
-      pin: '5566',
-      deviceToken: null,
-      status: 'ACTIVE',
-      joinedAt: '2024-02-10',
-      createdAt: '2024-02-10T09:00:00.000Z',
-    },
-    {
-      id: 'emp-004',
-      employeeCode: 'SS40-004',
-      name: 'Kumaravel Murugan',
-      email: 'kumar.m@ss40.network',
-      phone: '+91 98765 43213',
-      departmentId: 'dept-ops',
-      designation: 'Cloud Infrastructure Admin',
-      barcodeValue: 'SS40-EMP-4V77M9',
-      pin: '7788',
-      deviceToken: null,
-      status: 'ACTIVE',
-      joinedAt: '2024-04-05',
-      createdAt: '2024-04-05T09:00:00.000Z',
-    },
-    {
-      id: 'emp-005',
-      employeeCode: 'SS40-005',
-      name: 'Sneha Mohan',
-      email: 'sneha.m@ss40.network',
-      phone: '+91 98765 43214',
-      departmentId: 'dept-mkt',
-      designation: 'Growth Strategist',
-      barcodeValue: 'SS40-EMP-7R12W8',
-      pin: '9900',
-      deviceToken: null,
-      status: 'ACTIVE',
-      joinedAt: '2024-05-20',
-      createdAt: '2024-05-20T09:00:00.000Z',
-    },
   ];
 
   public sessions: AttendanceSession[] = [];
@@ -113,24 +76,22 @@ export class DatabaseStore {
     this.loadFromDisk();
   }
 
-  public async ensureInitialized() {
+  public async ensureInitialized(): Promise<void> {
     if (!this.initializedPromise) {
       this.initializedPromise = this.syncWithSupabase();
     }
     await this.initializedPromise;
   }
 
-  public async syncWithSupabase() {
+  public async syncWithSupabase(): Promise<void> {
     try {
-      const { getOfficeSettingsFromSupabase, getEmployeesFromSupabase } = await import('./supabase');
       const office = await getOfficeSettingsFromSupabase();
       if (office) {
         this.office = office;
       } else {
-        // Save initial default office to Supabase if empty
-        const { saveOfficeSettingsToSupabase } = await import('./supabase');
         await saveOfficeSettingsToSupabase(this.office);
       }
+
       const emps = await getEmployeesFromSupabase();
       if (emps && emps.length > 0) {
         this.employees = emps;
@@ -144,7 +105,6 @@ export class DatabaseStore {
     this.office = { ...office };
     this.persistToDisk();
     try {
-      const { saveOfficeSettingsToSupabase } = await import('./supabase');
       return await saveOfficeSettingsToSupabase(this.office);
     } catch (err) {
       console.warn('Supabase save office error:', err);
@@ -152,16 +112,25 @@ export class DatabaseStore {
     }
   }
 
-  public async addEmployee(emp: Employee): Promise<boolean> {
-    this.employees.push(emp);
+  public async upsertEmployee(emp: Employee): Promise<boolean> {
+    const idx = this.employees.findIndex((e) => e.id === emp.id);
+    if (idx >= 0) {
+      this.employees[idx] = { ...emp };
+    } else {
+      this.employees.push({ ...emp });
+    }
     this.persistToDisk();
     try {
-      const { saveEmployeeToSupabase } = await import('./supabase');
       return await saveEmployeeToSupabase(emp);
     } catch (err) {
       console.warn('Supabase save employee error:', err);
       return false;
     }
+  }
+
+  // Alias for backward compatibility
+  public async addEmployee(emp: Employee): Promise<boolean> {
+    return this.upsertEmployee(emp);
   }
 
   public async deleteEmployee(id: string): Promise<boolean> {
@@ -170,7 +139,6 @@ export class DatabaseStore {
     this.events = this.events.filter((ev) => ev.employeeId !== id);
     this.persistToDisk();
     try {
-      const { deleteEmployeeFromSupabase } = await import('./supabase');
       return await deleteEmployeeFromSupabase(id);
     } catch (err) {
       console.warn('Supabase delete employee error:', err);
@@ -181,13 +149,12 @@ export class DatabaseStore {
   public async saveSession(session: AttendanceSession): Promise<boolean> {
     const idx = this.sessions.findIndex((s) => s.id === session.id);
     if (idx >= 0) {
-      this.sessions[idx] = session;
+      this.sessions[idx] = { ...session };
     } else {
-      this.sessions.push(session);
+      this.sessions.push({ ...session });
     }
     this.persistToDisk();
     try {
-      const { saveSessionToSupabase } = await import('./supabase');
       return await saveSessionToSupabase(session);
     } catch (err) {
       console.warn('Supabase save session error:', err);
@@ -196,10 +163,14 @@ export class DatabaseStore {
   }
 
   public async saveEvent(event: AttendanceEvent): Promise<boolean> {
-    this.events.push(event);
+    const idx = this.events.findIndex((e) => e.id === event.id);
+    if (idx >= 0) {
+      this.events[idx] = { ...event };
+    } else {
+      this.events.push({ ...event });
+    }
     this.persistToDisk();
     try {
-      const { saveEventToSupabase } = await import('./supabase');
       return await saveEventToSupabase(event);
     } catch (err) {
       console.warn('Supabase save event error:', err);
@@ -282,15 +253,16 @@ export class DatabaseStore {
 
   private seedTodaySessions() {
     const today = this.getTodayDateIST();
-    // Seed some initial demo states for demonstration
-    const emp1 = this.employees[0]; // Abraham
-    const emp2 = this.employees[1]; // David
-    const emp3 = this.employees[2]; // Priya
+    if (!this.employees || this.employees.length < 2) return;
+
+    const emp2 = this.employees[1];
+    if (!emp2) return;
 
     // David: Logged in at 09:30 AM
     const sess2: AttendanceSession = {
       id: `sess-${emp2.id}-${today}`,
       employeeId: emp2.id,
+    
       officeId: this.office.id,
       attendanceDate: today,
       status: 'LOGGED_IN',
@@ -306,53 +278,16 @@ export class DatabaseStore {
       updatedAt: new Date().toISOString(),
     };
 
-    // Priya: On Lunch
-    const sess3: AttendanceSession = {
-      id: `sess-${emp3.id}-${today}`,
-      employeeId: emp3.id,
-      officeId: this.office.id,
-      attendanceDate: today,
-      status: 'ON_LUNCH',
-      loginAt: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-      logoutAt: null,
-      totalWorkMinutes: 200,
-      totalBreakMinutes: 15,
-      totalLunchMinutes: 25,
-      isLate: false,
-      lateMinutes: 0,
-      isMissedLogout: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    this.sessions.push(sess2);
 
-    this.sessions.push(sess2, sess3);
-
-    this.events.push(
-      {
-        id: 'ev-1',
-        sessionId: sess2.id,
-        employeeId: emp2.id,
-        eventType: 'LOGIN',
-        eventTime: sess2.loginAt!,
-        createdAt: sess2.loginAt!,
-      },
-      {
-        id: 'ev-2',
-        sessionId: sess3.id,
-        employeeId: emp3.id,
-        eventType: 'LOGIN',
-        eventTime: sess3.loginAt!,
-        createdAt: sess3.loginAt!,
-      },
-      {
-        id: 'ev-3',
-        sessionId: sess3.id,
-        employeeId: emp3.id,
-        eventType: 'LUNCH_START',
-        eventTime: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
-        createdAt: new Date().toISOString(),
-      }
-    );
+    this.events.push({
+      id: 'ev-1',
+      sessionId: sess2.id,
+      employeeId: emp2.id,
+      eventType: 'LOGIN',
+      eventTime: sess2.loginAt!,
+      createdAt: sess2.loginAt!,
+    });
   }
 }
 

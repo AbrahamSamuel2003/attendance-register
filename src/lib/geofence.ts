@@ -25,18 +25,27 @@ export function calculateHaversineDistance(
 }
 
 /**
- * Validates if the given coordinates fall within the office boundary
+ * Validates if the given coordinates fall within the office boundary,
+ * taking into account GPS accuracy tolerance for indoor drift.
  */
 export function isWithinGeofence(
   userLat: number,
   userLon: number,
   officeLat: number,
   officeLon: number,
-  radiusMeters: number
-): { isInside: boolean; distanceMeters: number } {
+  radiusMeters: number,
+  accuracyMeters: number = 0
+): { isInside: boolean; distanceMeters: number; effectiveDistanceMeters: number } {
   const distance = calculateHaversineDistance(userLat, userLon, officeLat, officeLon);
+  
+  // Allow an accuracy buffer (up to 50m max) to prevent indoor building attenuation false-positives
+  const accuracyBuffer = Math.min(Math.max(0, accuracyMeters || 0), 50);
+  const effectiveDistance = Math.max(0, distance - accuracyBuffer);
+
   return {
-    isInside: distance <= radiusMeters,
+    isInside: effectiveDistance <= radiusMeters,
     distanceMeters: distance,
+    effectiveDistanceMeters: effectiveDistance,
   };
 }
+

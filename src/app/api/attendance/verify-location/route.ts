@@ -6,7 +6,7 @@ export async function POST(req: Request) {
   try {
     await db.ensureInitialized();
     const body = await req.json();
-    const { latitude, longitude } = body;
+    const { latitude, longitude, accuracy } = body;
 
     if (typeof latitude !== 'number' || typeof longitude !== 'number') {
       return NextResponse.json(
@@ -15,19 +15,22 @@ export async function POST(req: Request) {
       );
     }
 
-    const { isInside, distanceMeters } = isWithinGeofence(
+    const { isInside, distanceMeters, effectiveDistanceMeters } = isWithinGeofence(
       latitude,
       longitude,
       db.office.latitude,
       db.office.longitude,
-      db.office.radiusMeters
+      db.office.radiusMeters,
+      typeof accuracy === 'number' ? accuracy : 0
     );
 
     return NextResponse.json({
       success: true,
       isInside,
       distanceMeters,
+      effectiveDistanceMeters,
       allowedRadiusMeters: db.office.radiusMeters,
+      accuracyMeters: typeof accuracy === 'number' ? Math.round(accuracy) : null,
       office: {
         name: db.office.name,
         address: db.office.address,

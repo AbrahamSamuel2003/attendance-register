@@ -13,14 +13,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Barcode value is required' }, { status: 400 });
     }
 
-    // 1. Find employee by barcode
+    // 1. Find employee by barcodeValue or employeeCode
+    const cleanInput = barcodeValue.trim().toUpperCase();
     const employee = db.employees.find(
-      (e) => e.barcodeValue.trim().toUpperCase() === barcodeValue.trim().toUpperCase()
+      (e) =>
+        e.barcodeValue.trim().toUpperCase() === cleanInput ||
+        e.employeeCode.trim().toUpperCase() === cleanInput
     );
 
     if (!employee) {
       return NextResponse.json(
-        { error: 'Invalid ID Card / Barcode. Employee record not found.' },
+        { error: `Invalid ID Card / Barcode '${barcodeValue}'. Employee record not found in system.` },
         { status: 404 }
       );
     }
@@ -32,8 +35,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Device Binding Security
-    // Check if device is bound to someone else
+    // 2. Device Binding Security (Optional binding)
     if (deviceToken) {
       const boundToOther = db.employees.find(
         (e) => e.id !== employee.id && e.deviceToken === deviceToken
@@ -41,27 +43,17 @@ export async function POST(req: Request) {
       if (boundToOther) {
         return NextResponse.json(
           {
-            error: `Device Conflict: This phone is already bound to another employee (${boundToOther.name}). Buddy punching is strictly prohibited.`,
+            error: `Device Conflict: This device is registered to another employee (${boundToOther.name}).`,
           },
           { status: 403 }
         );
       }
 
-      // Check if employee is already bound to a different device
-      if (employee.deviceToken && employee.deviceToken !== deviceToken) {
-        return NextResponse.json(
-          {
-            error: `Unauthorized Device: Your ID is bound to a different registered phone. Contact Admin to reset device binding if you changed your phone.`,
-          },
-          { status: 403 }
-        );
-      }
-
-      // First time binding
+      // If not yet bound, bind on first scan
       if (!employee.deviceToken) {
         employee.deviceToken = deviceToken;
         if (deviceModel) employee.deviceModel = deviceModel;
-        await db.addEmployee(employee);
+        await db.upsertEmployee(employee);
       }
     }
 

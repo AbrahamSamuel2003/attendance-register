@@ -140,34 +140,37 @@ export default function AttendanceMobilePage() {
   }, []);
 
   // 2. High-Speed Location Request & Backend Verification
-  const verifyLocationWithServer = useCallback(async (lat: number, lng: number) => {
-    try {
-      const res = await fetch('/api/attendance/verify-location', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ latitude: lat, longitude: lng }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to verify location');
+  const verifyLocationWithServer = useCallback(
+    async (lat: number, lng: number, accuracy: number = 0) => {
+      try {
+        const res = await fetch('/api/attendance/verify-location', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ latitude: lat, longitude: lng, accuracy }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to verify location');
 
-      setLocationStatus({
-        checked: true,
-        isInside: data.isInside,
-        distanceMeters: data.distanceMeters,
-        allowedRadius: data.allowedRadiusMeters,
-        officeName: data.office.name,
-        loading: false,
-        error: null,
-      });
-    } catch (err: any) {
-      setLocationStatus((prev) => ({
-        ...prev,
-        loading: false,
-        checked: true,
-        error: err.message || 'Geofence verification failed',
-      }));
-    }
-  }, []);
+        setLocationStatus({
+          checked: true,
+          isInside: data.isInside,
+          distanceMeters: data.distanceMeters,
+          allowedRadius: data.allowedRadiusMeters,
+          officeName: data.office.name,
+          loading: false,
+          error: null,
+        });
+      } catch (err: any) {
+        setLocationStatus((prev) => ({
+          ...prev,
+          loading: false,
+          checked: true,
+          error: err.message || 'Geofence verification failed',
+        }));
+      }
+    },
+    []
+  );
 
   const requestGPS = useCallback(() => {
     if (!navigator.geolocation) {
@@ -180,62 +183,51 @@ export default function AttendanceMobilePage() {
       return;
     }
 
-    // Check for insecure context on mobile (HTTP on LAN IP blocks GPS in Chrome/Safari)
-    const isSecure = typeof window !== 'undefined' ? (window.isSecureContext ?? true) : true;
-
     setLocationStatus((prev) => ({ ...prev, loading: true, error: null }));
 
-    // High-speed location request with fast timeout (2.5s)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude, accuracy } = pos.coords;
         setCoords({ lat: latitude, lng: longitude, accuracy });
-        verifyLocationWithServer(latitude, longitude);
+        verifyLocationWithServer(latitude, longitude, accuracy);
       },
       (err) => {
-        // Fallback to standard accuracy
+        console.warn('GPS high accuracy failed, trying standard accuracy:', err.message);
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             const { latitude, longitude, accuracy } = pos.coords;
             setCoords({ lat: latitude, lng: longitude, accuracy });
-            verifyLocationWithServer(latitude, longitude);
+            verifyLocationWithServer(latitude, longitude, accuracy);
           },
           (fallbackErr) => {
             console.warn('GPS location error:', fallbackErr.message);
-            const errDetail = !isSecure
-              ? 'Local network HTTP detected. Tap "Verify Location" below to proceed, or deploy to Vercel (HTTPS) for native GPS prompts.'
-              : 'Please allow location permission in your browser or tap "Turn On GPS" to retry.';
             setLocationStatus((prev) => ({
               ...prev,
               loading: false,
               checked: true,
-              error: errDetail,
+              error: 'Please allow location permission in your browser or tap "Detect Location" to retry.',
             }));
           },
-          { enableHighAccuracy: false, timeout: 2500, maximumAge: 120000 }
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 }
         );
       },
-      { enableHighAccuracy: true, timeout: 2000, maximumAge: 60000 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 }
     );
   }, [verifyLocationWithServer]);
-
-  const isManualSimulateRef = useRef(false);
 
   useEffect(() => {
     requestGPS();
 
-    // Auto-listen for location updates (triggers when user moves or taps "Turn on")
     let watchId: number | null = null;
     if (navigator.geolocation) {
       watchId = navigator.geolocation.watchPosition(
         (pos) => {
-          if (isManualSimulateRef.current) return; // Do not override if manual simulation was activated
           const { latitude, longitude, accuracy } = pos.coords;
           setCoords({ lat: latitude, lng: longitude, accuracy });
-          verifyLocationWithServer(latitude, longitude);
+          verifyLocationWithServer(latitude, longitude, accuracy);
         },
         () => {},
-        { enableHighAccuracy: false, maximumAge: 60000 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 }
       );
     }
 
@@ -245,26 +237,6 @@ export default function AttendanceMobilePage() {
       }
     };
   }, [requestGPS, verifyLocationWithServer]);
-
-  // Quick Demo GPS simulator (for development/desktop ease)
-  const simulateOfficeGPS = async () => {
-    isManualSimulateRef.current = true;
-    try {
-      const res = await fetch('/api/admin/settings');
-      const data = await res.json();
-      if (data.success) {
-        const officeLat = data.office.latitude;
-        const officeLng = data.office.longitude;
-        setCoords({ lat: officeLat, lng: officeLng, accuracy: 5 });
-        verifyLocationWithServer(officeLat, officeLng);
-      }
-    } catch (e) {
-      const defaultLat = 12.9716;
-      const defaultLng = 77.5946;
-      setCoords({ lat: defaultLat, lng: defaultLng, accuracy: 5 });
-      verifyLocationWithServer(defaultLat, defaultLng);
-    }
-  };
 
   const startCameraScanner = async () => {
     setIsScannerOpen(true);
@@ -588,8 +560,8 @@ export default function AttendanceMobilePage() {
           {locationStatus.loading ? (
             <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-100 text-center space-y-1.5">
               <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-xs font-semibold text-blue-900">Verifying Office Location...</p>
-              <p className="text-[11px] text-blue-700">Please tap &ldquo;Turn on&rdquo; on the Google/Device prompt to continue.</p>
+              <p className="text-xs font-semibold text-blue-900">Acquiring GPS Satellite Location...</p>
+              <p className="text-[11px] text-blue-700">Please allow location access when prompted.</p>
             </div>
           ) : locationStatus.isInside ? (
             <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center space-x-3">
@@ -600,6 +572,7 @@ export default function AttendanceMobilePage() {
                 </p>
                 <p className="text-[11px] text-emerald-700">
                   Distance: {locationStatus.distanceMeters}m (Allowed Radius: {locationStatus.allowedRadius}m)
+                  {coords?.accuracy ? ` • Accuracy: ±${Math.round(coords.accuracy)}m` : ''}
                 </p>
               </div>
             </div>
@@ -614,28 +587,18 @@ export default function AttendanceMobilePage() {
                       : 'Location Permission Needed'}
                   </p>
                   <p className="text-[11px] text-amber-700">
-                    {locationStatus.error || `Please turn on GPS on your phone to verify attendance.`}
+                    {locationStatus.error || `You must be within ${locationStatus.allowedRadius}m of the office. Current distance: ${locationStatus.distanceMeters}m.`}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  onClick={requestGPS}
-                  className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors flex items-center justify-center space-x-1.5"
-                >
-                  <Navigation className="w-3.5 h-3.5" />
-                  <span>Turn On / Detect GPS</span>
-                </button>
-
-                <button
-                  onClick={simulateOfficeGPS}
-                  className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors flex items-center justify-center space-x-1.5"
-                >
-                  <Zap className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Simulate Office GPS</span>
-                </button>
-              </div>
+              <button
+                onClick={requestGPS}
+                className="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors flex items-center justify-center space-x-1.5"
+              >
+                <Navigation className="w-3.5 h-3.5" />
+                <span>Re-detect Current Location</span>
+              </button>
             </div>
           )}
 
@@ -690,39 +653,52 @@ export default function AttendanceMobilePage() {
               className="hidden"
             />
 
-            {locationStatus.isInside ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  onClick={startCameraScanner}
-                  className="py-3.5 px-4 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white cursor-pointer"
-                >
-                  <Camera className="w-4 h-4" />
-                  <span>Live Camera Scan</span>
-                </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <button
+                onClick={startCameraScanner}
+                className="py-3.5 px-4 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white cursor-pointer"
+              >
+                <Camera className="w-4 h-4" />
+                <span>Live Camera Scan</span>
+              </button>
 
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isScanningFile}
+                className="py-3.5 px-4 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white cursor-pointer"
+              >
+                <Camera className="w-4 h-4" />
+                <span>{isScanningFile ? 'Decoding Photo...' : 'Snap / Upload Photo'}</span>
+              </button>
+            </div>
+
+            {/* Manual Code Input Option */}
+            <div className="pt-2">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  placeholder="Or enter ID / Barcode (e.g. SS40)"
+                  value={manualBarcodeInput}
+                  onChange={(e) => setManualBarcodeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && manualBarcodeInput.trim()) {
+                      handleBarcodeIdentified(manualBarcodeInput.trim());
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 rounded-xl bg-slate-50 text-slate-900 text-xs font-mono border border-slate-200"
+                />
                 <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isScanningFile}
-                  className="py-3.5 px-4 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white cursor-pointer"
+                  onClick={() => {
+                    if (manualBarcodeInput.trim()) {
+                      handleBarcodeIdentified(manualBarcodeInput.trim());
+                    }
+                  }}
+                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs"
                 >
-                  <Camera className="w-4 h-4" />
-                  <span>{isScanningFile ? 'Decoding Photo...' : 'Snap / Upload Photo'}</span>
+                  Submit
                 </button>
               </div>
-            ) : (
-              <div className="space-y-2">
-                <button
-                  onClick={simulateOfficeGPS}
-                  className="w-full py-3.5 rounded-xl font-bold text-xs shadow-xs transition-all flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white cursor-pointer"
-                >
-                  <Zap className="w-4 h-4 text-amber-300" />
-                  <span>Verify Office & Open Scanner</span>
-                </button>
-                <p className="text-[10px] text-slate-400">
-                  (Automatically matches office GPS coordinates)
-                </p>
-              </div>
-            )}
+            </div>
 
             {/* Quick Demo Test Pickers */}
             <div className="pt-4 border-t border-slate-100">
