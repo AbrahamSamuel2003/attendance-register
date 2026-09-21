@@ -500,12 +500,12 @@ export default function AdminEmployeesPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-slate-700 text-xs font-semibold">
-                      ID Card Barcode Number / Token
+                      Canva ID Card Code / Barcode / QR
                     </label>
                     {newEmpData.barcodeValue && (
                       <span className="text-[11px] font-semibold text-emerald-600 flex items-center space-x-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                         <CheckCircle2 className="w-3 h-3" />
-                        <span>Card Scanned</span>
+                        <span>Card Code Captured</span>
                       </span>
                     )}
                   </div>
@@ -516,22 +516,23 @@ export default function AdminEmployeesPage() {
                       onChange={(e) =>
                         setNewEmpData({ ...newEmpData, barcodeValue: e.target.value.toUpperCase() })
                       }
-                      placeholder="e.g. SS40-EMP-8F73K2 (or scan card above)"
+                      placeholder="e.g. SS40-EMP-2026001"
                       className="w-full px-3.5 py-2.5 rounded-xl bg-white text-slate-900 text-xs font-mono font-bold border border-slate-300 focus:border-blue-500"
+                      required
                     />
                     {newEmpData.barcodeValue && (
                       <button
                         type="button"
                         onClick={() => setNewEmpData({ ...newEmpData, barcodeValue: '' })}
                         className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs p-1"
-                        title="Clear barcode"
+                        title="Clear code"
                       >
                         ✕
                       </button>
                     )}
                   </div>
                   <p className="text-[11px] text-slate-500 mt-1">
-                    When you scan the physical ID card, the decoded code appears above and links directly to this employee upon registration.
+                    Scan via Live Camera / Snap Photo, or scan with a USB barcode gun, or type the code you created in Canva.
                   </p>
                 </div>
               </div>
