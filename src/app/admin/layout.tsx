@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
+import Logo from '@/components/Logo';
 import {
   Activity,
   Users,
@@ -262,25 +262,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <ArrowLeft className="w-4 h-4" />
           </Link>
 
-          <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-slate-200 flex items-center justify-center shrink-0">
-              <Image
-                src="/logo.avif"
-                alt="Logo"
-                width={32}
-                height={32}
-                className="object-contain w-full h-full p-0.5"
-              />
-            </div>
-            <div className="min-w-0">
-              <span className="font-bold text-slate-900 text-sm sm:text-base tracking-tight block truncate">
-                SS40 NETWORK
-              </span>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 font-normal truncate hidden xs:block">
-                Operations Command Center
-              </p>
-            </div>
-          </div>
+          <Link href="/" className="flex items-center min-w-0 hover:opacity-90 transition-opacity">
+            <Logo showText={true} subtitle="Operations Command Center" size={36} />
+          </Link>
         </div>
 
         {/* Right Header Actions & Mobile Menu Button */}

@@ -5,6 +5,13 @@ export const metadata: Metadata = {
   title: 'SS40 Network — Employee Attendance Register',
   description:
     'Workplace attendance management system with GPS Geofencing, Barcode/QR scanning, Device Binding, and Real-time Operations Monitoring.',
+  icons: {
+    icon: [
+      { url: '/logo.png', sizes: '32x32', type: 'image/png' },
+      { url: '/logo.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/logo.png' }],
+  },
 };
 
 export default function RootLayout({

@@ -2,37 +2,23 @@
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import {
   Smartphone,
   Lock,
   ArrowRight,
   Camera,
 } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
+    <main className="min-h-screen bg-[#fbf9f4] text-slate-900 flex flex-col justify-between">
       {/* Top Navigation Bar */}
-      <header className="border-b border-slate-200 bg-white sticky top-0 z-40 shadow-xs">
+      <header className="border-b border-[#e7dfd5] bg-white/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-200 flex items-center justify-center shadow-xs">
-              <Image
-                src="/logo.avif"
-                alt="SS40 Network Logo"
-                width={40}
-                height={40}
-                className="object-contain w-full h-full p-0.5"
-              />
-            </div>
-            <div>
-              <span className="font-bold text-base sm:text-lg text-slate-900 tracking-tight block">
-                SS40 NETWORK
-              </span>
-              <p className="text-xs text-slate-500 font-normal">Attendance Portal</p>
-            </div>
-          </div>
+          <Link href="/" className="hover:opacity-90 transition-opacity">
+            <Logo showText={true} size={42} subtitle="Attendance Portal" />
+          </Link>
 
           {/* Navbar Admin Link (Direct & 100% Mobile Compatible) */}
           <div className="flex items-center space-x-3">
