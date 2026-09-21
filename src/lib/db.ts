@@ -106,26 +106,108 @@ export class DatabaseStore {
 
   public sessions: AttendanceSession[] = [];
   public events: AttendanceEvent[] = [];
+  private initializedPromise: Promise<void> | null = null;
 
   private constructor() {
     this.seedTodaySessions();
     this.loadFromDisk();
-    this.syncWithSupabase();
+  }
+
+  public async ensureInitialized() {
+    if (!this.initializedPromise) {
+      this.initializedPromise = this.syncWithSupabase();
+    }
+    await this.initializedPromise;
   }
 
   public async syncWithSupabase() {
     try {
       const { getOfficeSettingsFromSupabase, getEmployeesFromSupabase } = await import('./supabase');
       const office = await getOfficeSettingsFromSupabase();
-      if (office) this.office = office;
+      if (office) {
+        this.office = office;
+      } else {
+        // Save initial default office to Supabase if empty
+        const { saveOfficeSettingsToSupabase } = await import('./supabase');
+        await saveOfficeSettingsToSupabase(this.office);
+      }
       const emps = await getEmployeesFromSupabase();
-      if (emps && emps.length > 0) this.employees = emps;
+      if (emps && emps.length > 0) {
+        this.employees = emps;
+      }
     } catch (err) {
       console.warn('Supabase sync warning:', err);
     }
   }
 
-  public persist() {
+  public async saveOffice(office: Office): Promise<boolean> {
+    this.office = { ...office };
+    this.persistToDisk();
+    try {
+      const { saveOfficeSettingsToSupabase } = await import('./supabase');
+      return await saveOfficeSettingsToSupabase(this.office);
+    } catch (err) {
+      console.warn('Supabase save office error:', err);
+      return false;
+    }
+  }
+
+  public async addEmployee(emp: Employee): Promise<boolean> {
+    this.employees.push(emp);
+    this.persistToDisk();
+    try {
+      const { saveEmployeeToSupabase } = await import('./supabase');
+      return await saveEmployeeToSupabase(emp);
+    } catch (err) {
+      console.warn('Supabase save employee error:', err);
+      return false;
+    }
+  }
+
+  public async deleteEmployee(id: string): Promise<boolean> {
+    this.employees = this.employees.filter((e) => e.id !== id);
+    this.sessions = this.sessions.filter((s) => s.employeeId !== id);
+    this.events = this.events.filter((ev) => ev.employeeId !== id);
+    this.persistToDisk();
+    try {
+      const { deleteEmployeeFromSupabase } = await import('./supabase');
+      return await deleteEmployeeFromSupabase(id);
+    } catch (err) {
+      console.warn('Supabase delete employee error:', err);
+      return false;
+    }
+  }
+
+  public async saveSession(session: AttendanceSession): Promise<boolean> {
+    const idx = this.sessions.findIndex((s) => s.id === session.id);
+    if (idx >= 0) {
+      this.sessions[idx] = session;
+    } else {
+      this.sessions.push(session);
+    }
+    this.persistToDisk();
+    try {
+      const { saveSessionToSupabase } = await import('./supabase');
+      return await saveSessionToSupabase(session);
+    } catch (err) {
+      console.warn('Supabase save session error:', err);
+      return false;
+    }
+  }
+
+  public async saveEvent(event: AttendanceEvent): Promise<boolean> {
+    this.events.push(event);
+    this.persistToDisk();
+    try {
+      const { saveEventToSupabase } = await import('./supabase');
+      return await saveEventToSupabase(event);
+    } catch (err) {
+      console.warn('Supabase save event error:', err);
+      return false;
+    }
+  }
+
+  public persistToDisk() {
     try {
       if (typeof window === 'undefined') {
         const fs = require('fs');
@@ -144,16 +226,16 @@ export class DatabaseStore {
           events: this.events,
         };
         fs.writeFileSync(dataFile, JSON.stringify(state, null, 2), 'utf-8');
-
-        // Cloud sync with Supabase
-        import('./supabase').then(({ saveOfficeSettingsToSupabase, saveEmployeeToSupabase }) => {
-          saveOfficeSettingsToSupabase(this.office);
-          this.employees.forEach((emp) => saveEmployeeToSupabase(emp));
-        }).catch(() => {});
       }
     } catch (e) {
       console.warn('DB persistence warning:', e);
     }
+  }
+
+  public persist() {
+    this.persistToDisk();
+    // Fire and forget background sync
+    this.saveOffice(this.office).catch(() => {});
   }
 
   private loadFromDisk() {

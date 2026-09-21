@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { Employee } from '@/types';
 
 export async function GET() {
+  await db.ensureInitialized();
   return NextResponse.json({
     success: true,
     employees: db.employees,
@@ -12,6 +13,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    await db.ensureInitialized();
     const body = await req.json();
     const { name, email, phone, departmentId, designation, pin, barcodeValue } = body;
 
@@ -69,8 +71,7 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
     };
 
-    db.employees.push(newEmp);
-    db.persist();
+    await db.addEmployee(newEmp);
 
     return NextResponse.json({
       success: true,

@@ -5,6 +5,7 @@ import { AttendanceStatus } from '@/types';
 
 export async function POST(req: Request) {
   try {
+    await db.ensureInitialized();
     const body = await req.json();
     const { barcodeValue, deviceToken, deviceModel } = body;
 
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
       if (!employee.deviceToken) {
         employee.deviceToken = deviceToken;
         if (deviceModel) employee.deviceModel = deviceModel;
+        await db.addEmployee(employee);
       }
     }
 

@@ -6,6 +6,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await db.ensureInitialized();
     const { id } = await params;
     const body = await req.json();
     const employee = db.employees.find((e) => e.id === id);
@@ -17,6 +18,7 @@ export async function PATCH(
     if (body.action === 'RESET_DEVICE') {
       employee.deviceToken = null;
       employee.deviceModel = null;
+      await db.addEmployee(employee);
       return NextResponse.json({
         success: true,
         message: `Device binding cleared for ${employee.name}. They can now bind a new device.`,
@@ -27,6 +29,7 @@ export async function PATCH(
     if (body.action === 'REGENERATE_BARCODE') {
       const randomHex = Math.random().toString(36).substring(2, 8).toUpperCase();
       employee.barcodeValue = `SS40-EMP-${randomHex}`;
+      await db.addEmployee(employee);
       return NextResponse.json({
         success: true,
         message: `New barcode generated: ${employee.barcodeValue}`,
@@ -44,6 +47,8 @@ export async function PATCH(
     if (body.departmentId) employee.departmentId = body.departmentId;
     if (body.status) employee.status = body.status;
 
+    await db.addEmployee(employee);
+
     return NextResponse.json({
       success: true,
       message: 'Employee updated successfully.',
@@ -60,27 +65,19 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await db.ensureInitialized();
     const { id } = await params;
-    const index = db.employees.findIndex((e) => e.id === id);
-    if (index === -1) {
+    const employee = db.employees.find((e) => e.id === id);
+    if (!employee) {
       return NextResponse.json({ error: 'Employee not found.' }, { status: 404 });
     }
 
-    const removed = db.employees.splice(index, 1)[0];
-    
-    // Clean up sessions and events for the deleted employee
-    db.sessions = db.sessions.filter((s) => s.employeeId !== id);
-    db.events = db.events.filter((ev) => ev.employeeId !== id);
-    db.persist();
-
-    // Delete from Supabase Cloud
-    import('@/lib/supabase').then(({ deleteEmployeeFromSupabase }) => {
-      deleteEmployeeFromSupabase(id);
-    }).catch(() => {});
+    const removedName = employee.name;
+    await db.deleteEmployee(id);
 
     return NextResponse.json({
       success: true,
-      message: `Employee ${removed.name} deleted permanently.`,
+      message: `Employee ${removedName} deleted permanently.`,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';

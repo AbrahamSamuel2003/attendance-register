@@ -4,6 +4,7 @@ import { AttendanceSummaryKPI, LiveAttendanceRecord } from '@/types';
 
 export async function GET() {
   try {
+    await db.ensureInitialized();
     const today = db.getTodayDateIST();
     const employees = db.employees;
     const departmentsMap = new Map(db.departments.map((d) => [d.id, d]));

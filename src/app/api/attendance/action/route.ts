@@ -5,6 +5,7 @@ import { AttendanceEventType, AttendanceSession, AttendanceEvent } from '@/types
 
 export async function POST(req: Request) {
   try {
+    await db.ensureInitialized();
     const body = await req.json();
     const { employeeId, action, pin, latitude, longitude, deviceToken, notes } = body;
 
@@ -83,7 +84,6 @@ export async function POST(req: Request) {
         createdAt: nowISO,
         updatedAt: nowISO,
       };
-      db.sessions.push(session);
     } else {
       session.status = nextStatus;
       session.updatedAt = nowISO;
@@ -105,14 +105,16 @@ export async function POST(req: Request) {
       notes,
       createdAt: nowISO,
     };
-    db.events.push(newEvent);
 
     // 5. Recalculate working and break durations
-    const sessionEvents = db.events.filter((ev) => ev.sessionId === session.id);
+    const sessionEvents = [...db.events.filter((ev) => ev.sessionId === session.id), newEvent];
     const durations = recalculateSessionDurations(sessionEvents);
     session.totalWorkMinutes = durations.totalWorkMinutes;
     session.totalBreakMinutes = durations.totalBreakMinutes;
     session.totalLunchMinutes = durations.totalLunchMinutes;
+
+    await db.saveSession(session);
+    await db.saveEvent(newEvent);
 
     return NextResponse.json({
       success: true,

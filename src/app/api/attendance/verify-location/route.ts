@@ -4,6 +4,7 @@ import { isWithinGeofence } from '@/lib/geofence';
 
 export async function POST(req: Request) {
   try {
+    await db.ensureInitialized();
     const body = await req.json();
     const { latitude, longitude } = body;
 
