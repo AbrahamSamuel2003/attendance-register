@@ -67,9 +67,15 @@ export async function DELETE(
     }
 
     const removed = db.employees.splice(index, 1)[0];
+    
+    // Clean up sessions and events for the deleted employee
+    db.sessions = db.sessions.filter((s) => s.employeeId !== id);
+    db.events = db.events.filter((ev) => ev.employeeId !== id);
+    db.persist();
+
     return NextResponse.json({
       success: true,
-      message: `Employee ${removed.name} removed.`,
+      message: `Employee ${removed.name} deleted permanently.`,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';

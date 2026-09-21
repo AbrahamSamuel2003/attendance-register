@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   Lock,
   Search,
+  Trash2,
 } from 'lucide-react';
 import { Employee, Department } from '@/types';
 import { generateCode128SVG, getBadgeQRCodeUrl } from '@/lib/barcode';
@@ -239,6 +240,28 @@ export default function AdminEmployeesPage() {
     }
   };
 
+  const handleDeleteEmployee = async (empId: string, empName: string) => {
+    if (
+      !confirm(
+        `Are you sure you want to permanently delete ${empName}? This will remove all their attendance records.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/employees/${empId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      alert(data.message);
+      fetchEmployees();
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   const departmentsMap = new Map(departments.map((d) => [d.id, d.name]));
 
   const filteredEmployees = employees.filter(
@@ -305,12 +328,21 @@ export default function AdminEmployeesPage() {
                   </span>
                 </div>
               </div>
+
+              {/* Delete Employee Icon Button */}
+              <button
+                onClick={() => handleDeleteEmployee(emp.id, emp.name)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                title={`Delete ${emp.name}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
 
             {/* Security Tokens */}
             <div className="p-3 rounded-xl bg-slate-50 space-y-2 text-xs border border-slate-100">
               <div className="flex justify-between text-slate-600">
-                <span>Scanned Barcode:</span>
+                <span>Canva Barcode/QR:</span>
                 <span className="font-mono text-slate-900 font-semibold">{emp.barcodeValue}</span>
               </div>
               <div className="flex justify-between text-slate-600">
@@ -346,7 +378,7 @@ export default function AdminEmployeesPage() {
 
               <button
                 onClick={() => handleResetDeviceBinding(emp.id, emp.name)}
-                className="py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-semibold border border-rose-200 flex items-center justify-center space-x-1 transition-colors"
+                className="py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 flex items-center justify-center space-x-1 transition-colors"
               >
                 <Smartphone className="w-3.5 h-3.5" />
                 <span>Reset Device</span>
