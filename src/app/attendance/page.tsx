@@ -192,7 +192,7 @@ export default function AttendanceMobilePage() {
         verifyLocationWithServer(latitude, longitude, accuracy);
       },
       (err) => {
-        console.warn('GPS high accuracy failed, trying standard accuracy:', err.message);
+        console.warn('GPS high accuracy failed, retrying with fresh fix:', err.message);
         navigator.geolocation.getCurrentPosition(
           (pos) => {
             const { latitude, longitude, accuracy } = pos.coords;
@@ -205,13 +205,13 @@ export default function AttendanceMobilePage() {
               ...prev,
               loading: false,
               checked: true,
-              error: 'Please allow location permission in your browser or tap "Detect Location" to retry.',
+              error: 'Please allow high-accuracy location permission in your browser or tap "Re-detect Current Location" to retry.',
             }));
           },
-          { enableHighAccuracy: false, timeout: 8000, maximumAge: 30000 }
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
         );
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   }, [verifyLocationWithServer]);
 
@@ -227,7 +227,7 @@ export default function AttendanceMobilePage() {
           verifyLocationWithServer(latitude, longitude, accuracy);
         },
         () => {},
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     }
 
@@ -564,32 +564,46 @@ export default function AttendanceMobilePage() {
               <p className="text-[11px] text-blue-700">Please allow location access when prompted.</p>
             </div>
           ) : locationStatus.isInside ? (
-            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center space-x-3">
-              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-              <div>
-                <p className="text-xs font-semibold text-emerald-900">
-                  Location Verified: Inside Office
-                </p>
-                <p className="text-[11px] text-emerald-700">
-                  Distance: {locationStatus.distanceMeters}m (Allowed Radius: {locationStatus.allowedRadius}m)
-                  {coords?.accuracy ? ` • Accuracy: ±${Math.round(coords.accuracy)}m` : ''}
-                </p>
+            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1.5">
+              <div className="flex items-center space-x-3">
+                <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-emerald-900">
+                    Location Verified: Inside Office
+                  </p>
+                  <p className="text-[11px] text-emerald-700">
+                    Distance: {locationStatus.distanceMeters}m (Allowed Radius: {locationStatus.allowedRadius}m)
+                    {coords?.accuracy ? ` • GPS Accuracy: ±${Math.round(coords.accuracy)}m` : ''}
+                  </p>
+                </div>
               </div>
+              {coords && (
+                <div className="text-[10px] font-mono text-emerald-700/80 bg-emerald-100/50 px-2 py-1 rounded-lg">
+                  Detected GPS: {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-2.5">
-              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center space-x-3">
-                <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
-                <div>
-                  <p className="text-xs font-semibold text-amber-900">
-                    {locationStatus.distanceMeters > 0
-                      ? `Outside Office Boundary (${locationStatus.distanceMeters}m away)`
-                      : 'Location Permission Needed'}
-                  </p>
-                  <p className="text-[11px] text-amber-700">
-                    {locationStatus.error || `You must be within ${locationStatus.allowedRadius}m of the office. Current distance: ${locationStatus.distanceMeters}m.`}
-                  </p>
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 space-y-1.5">
+                <div className="flex items-center space-x-3">
+                  <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+                  <div>
+                    <p className="text-xs font-semibold text-amber-900">
+                      {locationStatus.distanceMeters > 0
+                        ? `Outside Office Boundary (${locationStatus.distanceMeters}m away)`
+                        : 'Location Permission Needed'}
+                    </p>
+                    <p className="text-[11px] text-amber-700">
+                      {locationStatus.error || `You must be within ${locationStatus.allowedRadius}m of the office. Current distance: ${locationStatus.distanceMeters}m.`}
+                    </p>
+                  </div>
                 </div>
+                {coords && (
+                  <div className="text-[10px] font-mono text-amber-800/80 bg-amber-100/60 px-2 py-1 rounded-lg">
+                    Device GPS: {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)} {coords.accuracy ? `(±${Math.round(coords.accuracy)}m)` : ''}
+                  </div>
+                )}
               </div>
 
               <button
